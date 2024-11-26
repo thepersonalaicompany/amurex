@@ -1,0 +1,39 @@
+{
+  "name": "Amurex",
+  "version": "1.0.2",
+  "manifest_version": 3,
+  "description": "Your simple AI executive assistant.",
+  "side_panel": {
+    "default_path": "sidepanels/sidepanel.html"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "content_scripts": [
+    {
+      "js": ["content.js"],
+      "run_at": "document_end",
+      "matches": ["https://meet.google.com/*"],
+      "exclude_matches": ["https://meet.google.com/"]
+    }
+  ],
+  "permissions": ["storage", "downloads", "tabs", "sidePanel", "cookies"],
+  "host_permissions": [
+    "https://meet.google.com/*",
+    "https://www.googleapis.com/*",
+    "https://api.amurex.ai/*",
+    "https://app.amurex.ai/*",
+    "http://localhost:3000/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Amurex",
+    "default_icon": {
+      "16": "icon.png",
+      "48": "icon.png",
+      "128": "icon.png"
+    }
+  }
+}
