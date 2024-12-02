@@ -80,6 +80,8 @@ Take control of your meetings with Amurex, and let it handle the busywork while 
 2. Complete the 30 second onboarding process
 3. Become a 10x human with your personal copilot
 
+**Note:** Sometimes the chrome extension store might contain an older version of the extension. For the latest version, please use the self hosting option.
+
 ## Self Hosting
 1. Clone the repository
 2. Load the unpacked extension
