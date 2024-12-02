@@ -12,6 +12,9 @@
     <a href="https://twitter.com/thepersonalaico">
       <img src="https://img.shields.io/twitter/follow/thepersonalaico?style=social" alt="Twitter Follow" />
     </a>
+    <a href="https://discord.gg/ftUdQsHWbY">
+      <img alt="Discord" src="https://img.shields.io/discord/1306591395804348476">
+    </a>
   </p>
 </div>
 
