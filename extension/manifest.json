@@ -1,8 +1,8 @@
 {
-  "name": "Amurex",
-  "version": "1.0.2",
+  "name": "Amurex (Early Preview)",
+  "version": "1.0.3",
   "manifest_version": 3,
-  "description": "Your simple AI executive assistant.",
+  "description": "Your AI meeting Copilot",
   "side_panel": {
     "default_path": "sidepanels/sidepanel.html"
   },
@@ -17,7 +17,7 @@
       "exclude_matches": ["https://meet.google.com/"]
     }
   ],
-  "permissions": ["storage", "downloads", "tabs", "sidePanel", "cookies"],
+  "permissions": ["storage", "downloads", "sidePanel", "cookies"],
   "host_permissions": [
     "https://meet.google.com/*",
     "https://www.googleapis.com/*",
