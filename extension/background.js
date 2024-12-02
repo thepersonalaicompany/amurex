@@ -85,7 +85,6 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     message.type === "open_late_meeting_side_panel" ||
     message.type === "open_file_upload_panel"
   ) {
-    // Map message types to their corresponding paths
     const pathMap = {
       open_side_panel: "sidepanels/sidepanel.html",
       open_late_meeting_side_panel: `sidepanels/lateMeetingSidePanel.html${
@@ -98,36 +97,36 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 
     const panelPath = pathMap[message.type];
 
-    chrome.sidePanel
-      .open({ tabId: sender.tab.id }, async () => {
-        await chrome.storage.local.set({ redirect: message.type });
-        if (message.meetingId) {
-          await chrome.storage.local.set({ meetingId: message.meetingId });
-        }
-      })
-      .then(() => {
-        return chrome.sidePanel.setOptions({
-          tabId: sender.tab.id,
-          path: panelPath,
-          enabled: true,
-        });
-      })
-      .then(() => {
-        // Set the current navigation item in storage
-        let navItem;
-        if (message.type === "open_late_meeting_side_panel") {
-          navItem = "lateMeetingSidePanel";
-        } else if (message.type === "open_file_upload_panel") {
-          navItem = "file_upload_panel";
-        } else if (message.type === "open_side_panel") {
-          navItem = "sidepanel";
-        } else {
-          console.error("Invalid side panel type");
-        }
+    // Set options first
+    chrome.sidePanel.setOptions({
+      tabId: sender.tab.id,
+      path: panelPath,
+      enabled: true,
+    });
 
-        return chrome.storage.local.set({ navItem });
-      })
-      .catch((error) => console.error("Error handling side panel:", error));
+    // Open the panel
+    chrome.sidePanel.open({ tabId: sender.tab.id });
+
+    // Set storage values
+    chrome.storage.local.set({ redirect: message.type });
+    
+    if (message.meetingId) {
+      chrome.storage.local.set({ meetingId: message.meetingId });
+    }
+
+    // Set the navigation item
+    let navItem;
+    if (message.type === "open_late_meeting_side_panel") {
+      navItem = "lateMeetingSidePanel";
+    } else if (message.type === "open_file_upload_panel") {
+      navItem = "file_upload_panel";
+    } else if (message.type === "open_side_panel") {
+      navItem = "sidepanel";
+    } else {
+      console.error("Invalid side panel type");
+    }
+
+    chrome.storage.local.set({ navItem });
   }
 });
 
