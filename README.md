@@ -95,6 +95,9 @@ Take control of your meetings with Amurex, and let it handle the busywork while 
 3. Enable Developer Mode
 4. Load the unpacked extension
 
+## Supported meeting platforms
+- Google Meet
+
 <div align="center">
   Made with ❤️ for better <del>meetings</del> life
 </div>
