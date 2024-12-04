@@ -97,6 +97,7 @@ Take control of your meetings with Amurex, and let it handle the busywork while 
 
 ## Supported meeting platforms
 - Google Meet
+- [ ] More coming soon
 
 <div align="center">
   Made with ❤️ for better <del>meetings</del> life
