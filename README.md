@@ -28,6 +28,10 @@ As an open-source tool, Amurex is designed to be transparent, secure, and privac
 
 Take control of your meetings with Amurex, and let it handle the busywork while you focus on what truly matters.
 
+## Supported meeting platforms
+- Google Meet
+- [ ] More coming soon!
+
 ## Features
 
 - **Real-time Suggestions During Meetings**  
@@ -94,10 +98,6 @@ Take control of your meetings with Amurex, and let it handle the busywork while 
 2. Navigate to `chrome://extensions`
 3. Enable Developer Mode
 4. Load the unpacked extension
-
-## Supported meeting platforms
-- Google Meet
-- [ ] More coming soon
 
 <div align="center">
   Made with ❤️ for better <del>meetings</del> life
