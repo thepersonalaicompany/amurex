@@ -1,8 +1,6 @@
 robyn==0.64.2
 openai==1.54.1
 requests
-fastapi==0.109.2
-uvicorn==0.27.1
 openai==1.54.1
 requests==2.31.0
 pydantic==2.6.1
@@ -18,3 +16,4 @@ python-multipart==0.0.17
 mixedbread-ai==2.2.6
 pypdf2==3.0.1
 sentry-sdk==2.19.0
+fastembed==0.4.2
