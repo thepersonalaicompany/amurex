@@ -89,8 +89,8 @@ Take control of your meetings with Amurex, and let it handle the busywork while 
 ## Self Hosting
 1. Clone the repository
 2. Load the unpacked extension
-3. Navigate to the `server` directory
-4. Use one of the options from `server/README.md` to run the server
+3. Navigate to the [ `backend` ](https://github.com/thepersonalaicompany/amurex-backend) repository.
+4. Use one of the options from `README.md` to run the server
 
 ## Using the development version
 
