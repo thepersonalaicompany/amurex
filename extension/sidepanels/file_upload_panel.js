@@ -1,5 +1,5 @@
-const BASE_URL_WEB_INTERFACE = "https://app.amurex.ai";
-const BASE_URL_BACKEND = "https://api.amurex.ai";
+const BASE_URL_WEB = AMUREX_CONFIG.BASE_URL_WEB;
+const BASE_URL_BACKEND = AMUREX_CONFIG.BASE_URL_BACKEND;
 // https://api.amurex.ai / we should use this
 // https://developer.chrome.com/docs/extensions/reference/api/management#type-ExtensionInstallType
 // we need to refer this
@@ -15,7 +15,7 @@ document.getElementById("close-btn").addEventListener("click", () => {
 
 document.getElementById("settings-btn").addEventListener("click", () => {
   chrome.tabs.create({
-    url: `${BASE_URL_WEB_INTERFACE}/settings`,
+    url: `${BASE_URL_WEB}/settings`,
   });
 });
 
@@ -39,13 +39,13 @@ function updateUI(isAuthenticated) {
 
 document.getElementById("sign-in-btn").addEventListener("click", () => {
   chrome.tabs.create({
-    url: `${BASE_URL_WEB_INTERFACE}/signin?extension=true`,
+    url: `${BASE_URL_WEB}/signin?extension=true`,
   });
 });
 
 document.getElementById("sign-up-btn").addEventListener("click", () => {
   chrome.tabs.create({
-    url: `${BASE_URL_WEB_INTERFACE}/signup`,
+    url: `${BASE_URL_WEB}/signup`,
   });
 });
 

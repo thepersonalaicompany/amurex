@@ -1,5 +1,5 @@
-const BASE_URL_BACKEND = "https://api.amurex.ai";
-const BASE_URL_WEB = "https://app.amurex.ai";
+const BASE_URL_BACKEND = AMUREX_CONFIG.BASE_URL_BACKEND;
+const BASE_URL_WEB = AMUREX_CONFIG.BASE_URL_WEB;
 
 document.addEventListener("DOMContentLoaded", () => {
   checkSession(updateUI);

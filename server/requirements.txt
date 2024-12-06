@@ -16,4 +16,4 @@ python-multipart==0.0.17
 mixedbread-ai==2.2.6
 pypdf2==3.0.1
 sentry-sdk==2.19.0
-fastembed==0.4.2
+# fastembed==0.4.2
