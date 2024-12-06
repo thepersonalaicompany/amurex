@@ -16,7 +16,7 @@ import uuid
 import fitz
 from dotenv import load_dotenv
 from mixedbread_ai.client import MixedbreadAI
-from fastembed import TextEmbedding
+# from fastembed import TextEmbedding
 from io import BytesIO
 from PyPDF2 import PdfReader
 from robyn import Robyn, ALLOW_CORS, WebSocket, Response, Request
@@ -80,13 +80,13 @@ class EmbeddingAdapter:
     def __init__(self, client_mode):
         self.client_mode = client_mode
         self.mxbai_client = MixedbreadAI(api_key=os.getenv("MXBAI_API_KEY"))
-        self.fastembed_model = TextEmbedding(model_name="BAAI/bge-base-en")
+        # self.fastembed_model = TextEmbedding(model_name="BAAI/bge-base-en")
 
     def embeddings(self, text):
-        if self.client_mode == "LOCAL":
-            result = embeddings = np.array(list(self.fastembed_model.embed([text])))[-1].tolist()
-            return result
-        elif self.client_mode == "ONLINE":
+        # if self.client_mode == "LOCAL":
+            # result = embeddings = np.array(list(self.fastembed_model.embed([text])))[-1].tolist()
+            # return result
+        # elif self.client_mode == "ONLINE":
             result = self.mxbai_client.embeddings(
                 model='mixedbread-ai/mxbai-embed-large-v1',
                 input=[text],
