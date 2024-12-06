@@ -16,6 +16,7 @@ import uuid
 import fitz
 from dotenv import load_dotenv
 from mixedbread_ai.client import MixedbreadAI
+from fastembed import TextEmbedding
 from io import BytesIO
 from PyPDF2 import PdfReader
 from robyn import Robyn, ALLOW_CORS, WebSocket, Response, Request
@@ -46,7 +47,7 @@ class AIClientAdapter:
             "gpt-4o": "llama3.2"
         }
         groq = {
-            "llama3.2": "llama3-70b-8192" 
+            "llama3.2": "llama3-70b-8192"
         }
         if self.client_mode == "LOCAL":
             # Use Ollama client
@@ -75,9 +76,31 @@ class AIClientAdapter:
                 ).choices[0].message.content
 
 
+class EmbeddingAdapter:
+    def __init__(self, client_mode):
+        self.client_mode = client_mode
+        self.mxbai_client = MixedbreadAI(api_key=os.getenv("MXBAI_API_KEY"))
+        self.fastembed_model = TextEmbedding(model_name="BAAI/bge-base-en")
+
+    def embeddings(self, text):
+        if self.client_mode == "LOCAL":
+            result = embeddings = np.array(list(self.fastembed_model.embed([text])))[-1].tolist()
+            return result
+        elif self.client_mode == "ONLINE":
+            result = self.mxbai_client.embeddings(
+                model='mixedbread-ai/mxbai-embed-large-v1',
+                input=[text],
+                normalized=True,
+                encoding_format='float',
+                truncation_strategy='end'
+            )
+
+            return result.data[0].embedding
+
+
 client_mode = os.getenv("CLIENT_MODE")
 ai_client = AIClientAdapter(client_mode)
-mxbai = MixedbreadAI(api_key=os.getenv("MXBAI_API_KEY"))
+embedding_client = EmbeddingAdapter(client_mode)
 
 app = Robyn(__file__)
 websocket = WebSocket(app, "/ws")
@@ -246,15 +269,8 @@ def get_chunks(text):
 
 
 def embed_text(text):
-    embeddings = mxbai.embeddings(
-        model='mixedbread-ai/mxbai-embed-large-v1',
-        input=[text],
-        normalized=True,
-        encoding_format='float',
-        truncation_strategy='end'
-    )
-
-    return embeddings.data[0].embedding
+    embeddings = embedding_client.embeddings(text)
+    return embeddings
 
 
 @app.post("/upload_meeting_file/:meeting_id/:user_id/")
