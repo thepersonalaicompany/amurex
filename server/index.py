@@ -339,26 +339,6 @@ class ActionItemsRequest(Body):
     meeting_summary: Optional[ str ] = None
 
 
-class CreateMeetingRequest(Body):
-    user_id: str
-    meeting_id: str
-
-
-@app.post("/create_meeting")
-async def create_meeting(request: Request, body:CreateMeetingRequest):
-    data = request.json()
-
-    try:
-        result = supabase.table("meetings").insert({
-            "user_id": data["user_id"],
-            "meeting_id": data["meeting_id"]
-        }).execute()
-        
-        return {"status": "success", "data": result.data[0]}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-
-
 @app.post("/generate_actions")
 async def generate_actions(request, body: ActionRequest):
     data = request.json()
