@@ -1,5 +1,5 @@
 const BASE_URL_BACKEND = AMUREX_CONFIG.BASE_URL_BACKEND;
-  const BASE_URL_WEB = AMUREX_CONFI.BASE_URL_WEB;
+const BASE_URL_WEB = AMUREX_CONFIG.BASE_URL_WEB;
 
 document.addEventListener("DOMContentLoaded", () => {
   checkSession(updateUI);
@@ -8,7 +8,6 @@ document.addEventListener("DOMContentLoaded", () => {
     window.close();
   });
 });
-
 
 async function fetchAINotes() {
   const summaryDiv = document.getElementById("meeting-summary");
@@ -49,17 +48,14 @@ async function fetchAINotes() {
     };
 
     // Make API request
-    const response = await fetch(
-      `${BASE_URL_BACKEND}/generate_actions`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(body),
-      }
-    );
+    const response = await fetch(`${BASE_URL_BACKEND}/generate_actions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(body),
+    });
 
     if (!response.ok) {
       throw new Error(`Server responded with ${response.status}`);
@@ -109,7 +105,6 @@ async function fetchAINotes() {
     actionItemsDiv.innerHTML = `<p class="error-details">Error: ${error.message}</p>`;
   }
 }
-
 
 // Also fetch notes when the page loads
 document.addEventListener("DOMContentLoaded", fetchAINotes);
@@ -208,22 +203,18 @@ function generateEmailOptions(data) {
       .map((cb) => cb.value);
 
     try {
-      const response = await fetch(
-        `${BASE_URL_BACKEND}/submit`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            emails: selectedEmails,
-            action_items: document.querySelector("#action-items").innerHTML,
-            meeting_summary:
-              document.querySelector("#meeting-summary").innerHTML,
-          }),
-        }
-      );
+      const response = await fetch(`${BASE_URL_BACKEND}/submit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          emails: selectedEmails,
+          action_items: document.querySelector("#action-items").innerHTML,
+          meeting_summary: document.querySelector("#meeting-summary").innerHTML,
+        }),
+      });
 
       if (!response.ok) throw new Error("Failed to send emails");
 
@@ -239,7 +230,6 @@ function generateEmailOptions(data) {
     }
   });
 }
-
 
 document.getElementById("download-transcript").addEventListener("click", () => {
   chrome.storage.local.get(
@@ -265,7 +255,10 @@ function updateUI(isAuthenticated) {
   } else {
     authContainer.style.display = "block";
     authenticatedContent.style.display = "none";
-    chrome.storage.sync.set({ operationMode: "manual", isAuthenticated: false });
+    chrome.storage.sync.set({
+      operationMode: "manual",
+      isAuthenticated: false,
+    });
   }
 }
 
