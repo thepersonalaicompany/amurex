@@ -32,8 +32,51 @@ sentry_sdk.profiler.start_profiler()
 load_dotenv()
 
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+class AIClientAdapter:
+    def __init__(self, client_mode):
+        self.client_mode = client_mode
+        self.ollama_url = "http://localhost:11434/api/chat"
+        self.openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+    def chat_completions_create(self, model, messages, temperature=0.2, response_format=None):
+        # expect llama3.2 as the model name
+        local = {
+            "llama3.2": "llama3.2",
+            "gpt-4o": "llama3.2"
+        }
+        groq = {
+            "llama3.2": "llama3-70b-8192" 
+        }
+        if self.client_mode == "LOCAL":
+            # Use Ollama client
+            data = {
+                "messages": messages,
+                "model": local[model],
+                "stream": False,
+            }
+            response = requests.post(self.ollama_url, json=data)
+            return json.loads(response.text)["message"]["content"]
+        elif self.client_mode == "ONLINE":
+            # Use OpenAI or Groq client based on the model
+            if "gpt" in model:
+                return self.openai_client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    temperature=temperature,
+                    response_format=response_format
+                ).choices[0].message.content
+            else:
+                return self.groq_client.chat.completions.create(
+                    model=groq[model],
+                    messages=messages,
+                    temperature=temperature,
+                    response_format=response_format
+                ).choices[0].message.content
+
+
+client_mode = os.getenv("CLIENT_MODE")
+ai_client = AIClientAdapter(client_mode)
 mxbai = MixedbreadAI(api_key=os.getenv("MXBAI_API_KEY"))
 
 app = Robyn(__file__)
@@ -101,14 +144,14 @@ def extract_action_items(transcript):
     ]
 
     # Sending the prompt to the AI model using chat completions
-    response = client.chat.completions.create(
+    response = ai_client.chat_completions_create(
         model="gpt-4o",
         messages=messages,
         temperature=0.2,
         response_format={"type": "json_object"}
     )
 
-    action_items = json.loads(response.choices[0].message.content)["html"]
+    action_items = json.loads(response)["html"]
     return action_items
 
 
@@ -121,13 +164,13 @@ def generate_notes(transcript):
         }
     ]
 
-    response = client.chat.completions.create(
+    response = ai_client.chat_completions_create(
         model="gpt-4o",
         messages=messages,
         temperature=0.2
     )
 
-    notes = response.choices[0].message.content
+    notes = response
     return notes
 
 
@@ -409,14 +452,13 @@ def generate_realtime_suggestion(context, transcript):
         }
     ]
 
-    response = groq_client.chat.completions.create(
-        model="llama3-70b-8192",
+    response = ai_client.chat_completions_create(
+        model="llama3.2",
         messages=messages,
-        stream=False,
         temperature=0
     )
 
-    response = response.choices[0].message.content
+    response = response
 
     return response
 
@@ -485,14 +527,14 @@ def check_suggestion(request_dict):
             }
         ]
 
-        response = client.chat.completions.create(
+        response = ai_client.chat_completions_create(
             model="gpt-4o",
             messages=messages_list,
             temperature=0,
             response_format={"type": "json_object"}
         )
 
-        response_content = json.loads(response.choices[0].message.content)
+        response_content = json.loads(response)
         last_question = response_content["last_question"]
 
         if 'needs_help' in response_content and response_content["needs_help"]:
