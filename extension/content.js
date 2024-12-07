@@ -94,26 +94,43 @@ let transcriptProcessingInterval = null;
 function setupWebSocket() {
   console.log("Setting up WebSocket");
   const meetingId = document.location.pathname.split("/")[1];
-  ws = new WebSocket(
-    `wss://${BASE_URL_BACKEND.replace(
-      "https://",
-      ""
-    )}/ws?meeting_id=${meetingId}`
+
+  // Get userId first, then set up WebSocket
+  chrome.runtime.sendMessage(
+    {
+      action: "getUserId",
+    },
+    (response) => {
+      if (chrome.runtime.lastError) {
+        console.error("Error getting user id:", chrome.runtime.lastError);
+        return;
+      }
+
+      const userId = response.userId;
+      console.log("User ID:", userId);
+
+      ws = new WebSocket(
+        `wss://${BASE_URL_BACKEND.replace(
+          "https://",
+          ""
+        )}/ws?meeting_id=${meetingId}&user_id=${userId}`
+      );
+
+      ws.onopen = () => {
+        console.log("WebSocket Connected");
+      };
+
+      ws.onclose = () => {
+        console.log("WebSocket Disconnected");
+        // Attempt to reconnect after 5 seconds
+        setTimeout(setupWebSocket, 5000);
+      };
+
+      ws.onerror = (error) => {
+        console.error("WebSocket Error:", error);
+      };
+    }
   );
-
-  ws.onopen = () => {
-    console.log("WebSocket Connected");
-  };
-
-  ws.onclose = () => {
-    console.log("WebSocket Disconnected");
-    // Attempt to reconnect after 5 seconds
-    setTimeout(setupWebSocket, 5000);
-  };
-
-  ws.onerror = (error) => {
-    console.error("WebSocket Error:", error);
-  };
 }
 
 function checkStoredTranscripts() {
@@ -241,7 +258,7 @@ const debouncedDoStuff = async function () {
             timestamp: new Date().toISOString(),
             question: "Only limited suggestions allowed per meeting in beta.",
             answer:
-            "To get more suggestions and access to more exciting features, join our early adopters list at <a href='https://amurex.ai/early' target='_blank'>waitlist</a>.",
+              "To get more suggestions and access to more exciting features, join our early adopters list at <a href='https://amurex.ai/early' target='_blank'>waitlist</a>.",
             meetingId: meetingId,
             type: "system_notification",
           });
