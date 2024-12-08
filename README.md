@@ -89,7 +89,7 @@ Take control of your meetings with Amurex, and let it handle the busywork while 
 ## Self Hosting
 1. Clone the repository
 2. Load the unpacked extension
-3. Navigate to the [ `backend` ](https://github.com/thepersonalaicompany/amurex-backend) repository.
+3. Navigate to the [`backend`](https://github.com/thepersonalaicompany/amurex-backend) repository.
 4. Use one of the options from `README.md` to run the server
 5. Change the `BASE_URL_BACKEND` in `extension/sidepanels/config.js` to the URL of the backend server, Most likely `http://localhost:8080`
 6. Change the `BASE_URL_WEB` variable in the `extension/conent.js` to the URL of the backend server. Most likely `http://localhost:8080`
@@ -100,6 +100,18 @@ Take control of your meetings with Amurex, and let it handle the busywork while 
 2. Navigate to `chrome://extensions`
 3. Enable Developer Mode
 4. Load the unpacked extension
+
+
+## Get Involved
+
+We welcome contributions from the community! Here's how you can help:
+
+1. 🐛 **Report Bugs**: Open an issue if you find any bugs or unexpected behavior
+2. 💡 **Suggest Features**: Have an idea? Share it in the issues section
+3. 🛠️ **Submit PRs**: Want to fix a bug or add a feature? PRs are welcome
+4. ⭐ **Spread the Word**: Star the repo and share it with others
+
+Join our [discord](https://discord.gg/ftUdQsHWbY) to chat with the team and other users.
 
 <div align="center">
   Made with ❤️ for better <del>meetings</del> life
