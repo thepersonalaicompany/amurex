@@ -1,5 +1,3 @@
-let BASE_URL_WEB = AMUREX_CONFIG.BASE_URL_WEB;
-
 document.addEventListener("DOMContentLoaded", () => {
   checkSession(updateUI);
   setupCookieListener(updateUI);

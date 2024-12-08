@@ -1,10 +1,8 @@
-let BASE_URL_WEB = AMUREX_CONFIG.BASE_URL_WEB;
-
 function setupCookieListener(updateUI) {
   // Listen for cookie changes
   chrome.cookies.onChanged.addListener((changeInfo) => {
     const cookie = changeInfo.cookie;
-    const isProd = cookie.domain.includes(BASE_URL_WEB);
+    const isProd = cookie.domain.includes(AMUREX_CONFIG.BASE_URL_WEB);
 
     if (cookie.name === "amurex_session" && isProd) {
       // Cookie was added or removed
@@ -25,7 +23,7 @@ function checkSession(updateUI) {
   // Check localhost first
   chrome.cookies.get(
     {
-      url: BASE_URL_WEB,
+      url: AMUREX_CONFIG.BASE_URL_WEB,
       name: "amurex_session",
     },
     function (cookie) {
@@ -39,7 +37,7 @@ function checkSession(updateUI) {
 
 async function getSession() {
   let session = await chrome.cookies.get({
-    url: BASE_URL_WEB,
+    url: AMUREX_CONFIG.BASE_URL_WEB,
     name: "amurex_session",
   });
   if (session && session.value) {
