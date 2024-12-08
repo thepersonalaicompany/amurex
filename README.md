@@ -91,6 +91,8 @@ Take control of your meetings with Amurex, and let it handle the busywork while 
 2. Load the unpacked extension
 3. Navigate to the [ `backend` ](https://github.com/thepersonalaicompany/amurex-backend) repository.
 4. Use one of the options from `README.md` to run the server
+5. Change the `BASE_URL_BACKEND` in `extension/sidepanels/config.js` to the URL of the backend server, Most likely `http://localhost:8080`
+6. Change the `BASE_URL_WEB` variable in the `extension/conent.js` to the URL of the backend server. Most likely `http://localhost:8080`
 
 ## Using the development version
 
