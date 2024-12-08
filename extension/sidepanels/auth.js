@@ -1,11 +1,12 @@
+let BASE_URL_WEB = AMUREX_CONFIG.BASE_URL_WEB;
+
 function setupCookieListener(updateUI) {
   // Listen for cookie changes
   chrome.cookies.onChanged.addListener((changeInfo) => {
     const cookie = changeInfo.cookie;
-    const isLocalhost = cookie.domain.includes("localhost");
-    const isProd = cookie.domain.includes("app.amurex.ai");
+    const isProd = cookie.domain.includes(BASE_URL_WEB);
 
-    if (cookie.name === "amurex_session" && (isLocalhost || isProd)) {
+    if (cookie.name === "amurex_session" && isProd) {
       // Cookie was added or removed
       const isAuthenticated = !changeInfo.removed && cookie.value;
       if (isAuthenticated) {
@@ -24,41 +25,21 @@ function checkSession(updateUI) {
   // Check localhost first
   chrome.cookies.get(
     {
-      url: "http://localhost:3000",
+      url: BASE_URL_WEB,
       name: "amurex_session",
     },
-    function (localCookie) {
-      if (localCookie && localCookie.value) {
+    function (cookie) {
+      if (cookie && cookie.value) {
         updateUI(true);
         return;
       }
-
-      // If no localhost cookie, check production
-      chrome.cookies.get(
-        {
-          url: "https://app.amurex.ai",
-          name: "amurex_session",
-        },
-        function (prodCookie) {
-          const isAuthenticated = prodCookie && prodCookie.value;
-          updateUI(isAuthenticated);
-        }
-      );
     }
   );
 }
 
 async function getSession() {
   let session = await chrome.cookies.get({
-    url: "http://localhost:3000",
-    name: "amurex_session",
-  });
-  if (session && session.value) {
-    return session.value;
-  }
-
-  session = await chrome.cookies.get({
-    url: "https://app.amurex.ai",
+    url: BASE_URL_WEB,
     name: "amurex_session",
   });
   if (session && session.value) {
@@ -66,4 +47,3 @@ async function getSession() {
   }
   return null;
 }
-

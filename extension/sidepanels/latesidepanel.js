@@ -1,6 +1,3 @@
-const BASE_URL_BACKEND = AMUREX_CONFIG.BASE_URL_BACKEND;
-const BASE_URL_WEB = AMUREX_CONFIG.BASE_URL_WEB;
-
 document.addEventListener("DOMContentLoaded", () => {
   checkSession(updateUI);
   setupCookieListener(updateUI);
@@ -16,7 +13,7 @@ async function fetchLateSummary() {
     try {
       // strip any of the query params from the url, i.e. ?something=something
       const response = await fetch(
-        `${BASE_URL_BACKEND}/late_summary/${meetingId}`
+        `${AMUREX_CONFIG.BASE_URL_BACKEND}/late_summary/${meetingId}`
       );
   
       if (!response.ok) {
@@ -63,7 +60,6 @@ async function fetchLateSummary() {
 document.addEventListener("DOMContentLoaded", fetchLateSummary);
 
 
-
 function updateUI(isAuthenticated) {
   const authContainer = document.getElementById("auth-container");
   const authenticatedContent = document.getElementById("authenticated-content");
@@ -81,18 +77,18 @@ function updateUI(isAuthenticated) {
 
 document.getElementById("sign-in-btn").addEventListener("click", () => {
   chrome.tabs.create({
-    url: `${BASE_URL_WEB}/signin?extension=true`,
+    url: `${AMUREX_CONFIG.BASE_URL_WEB}/signin?extension=true`,
   });
 });
 
 document.getElementById("sign-up-btn").addEventListener("click", () => {
   chrome.tabs.create({
-    url: `${BASE_URL_WEB}/signup`,
+    url: `${AMUREX_CONFIG.BASE_URL_WEB}/signup`,
   });
 });
 
 document.getElementById("settings-btn").addEventListener("click", () => {
   chrome.tabs.create({
-    url: `${BASE_URL_WEB}/settings`,
+    url: `${AMUREX_CONFIG.BASE_URL_WEB}/settings`,
   });
 });

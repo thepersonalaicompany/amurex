@@ -1,6 +1,3 @@
-const BASE_URL_BACKEND = AMUREX_CONFIG.BASE_URL_BACKEND;
-const BASE_URL_WEB = AMUREX_CONFIG.BASE_URL_WEB;
-
 document.addEventListener("DOMContentLoaded", () => {
   checkSession(updateUI);
   setupCookieListener(updateUI);
@@ -48,7 +45,7 @@ async function fetchAINotes() {
     };
 
     // Make API request
-    const response = await fetch(`${BASE_URL_BACKEND}/generate_actions`, {
+    const response = await fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/generate_actions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -203,7 +200,7 @@ function generateEmailOptions(data) {
       .map((cb) => cb.value);
 
     try {
-      const response = await fetch(`${BASE_URL_BACKEND}/submit`, {
+      const response = await fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/submit`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -245,6 +242,7 @@ document.getElementById("download-transcript").addEventListener("click", () => {
 });
 
 function updateUI(isAuthenticated) {
+  console.log("isAuthenticated", isAuthenticated);
   const authContainer = document.getElementById("auth-container");
   const authenticatedContent = document.getElementById("authenticated-content");
 
@@ -264,18 +262,18 @@ function updateUI(isAuthenticated) {
 
 document.getElementById("sign-in-btn").addEventListener("click", () => {
   chrome.tabs.create({
-    url: `${BASE_URL_WEB}/signin?extension=true`,
+    url: `${AMUREX_CONFIG.BASE_URL_WEB}/signin?extension=true`,
   });
 });
 
 document.getElementById("sign-up-btn").addEventListener("click", () => {
   chrome.tabs.create({
-    url: `${BASE_URL_WEB}/signup`,
+    url: `${AMUREX_CONFIG.BASE_URL_WEB}/signup`,
   });
 });
 
 document.getElementById("settings-btn").addEventListener("click", () => {
   chrome.tabs.create({
-    url: `${BASE_URL_WEB}/settings`,
+    url: `${AMUREX_CONFIG.BASE_URL_WEB}/settings`,
   });
 });
