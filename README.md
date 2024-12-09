@@ -12,7 +12,7 @@
     <a href="https://twitter.com/thepersonalaico">
       <img src="https://img.shields.io/twitter/follow/thepersonalaico?style=social" alt="Twitter Follow" />
     </a>
-    <a href="https://discord.gg/ftUdQsHWbY">
+    <a href="https://discord.gg/PTUSVUJRM3">
       <img alt="Discord" src="https://img.shields.io/discord/1306591395804348476">
     </a>
   </p>
@@ -111,7 +111,7 @@ We welcome contributions from the community! Here's how you can help:
 3. 🛠️ **Submit PRs**: Want to fix a bug or add a feature? PRs are welcome
 4. ⭐ **Spread the Word**: Star the repo and share it with others
 
-Join our [discord](https://discord.gg/ftUdQsHWbY) to chat with the team and other users.
+Join our [discord](https://discord.gg/PTUSVUJRM3) to chat with the team and other users.
 
 <div align="center">
   Made with ❤️ for better <del>meetings</del> life
