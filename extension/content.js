@@ -109,12 +109,14 @@ function setupWebSocket() {
       const userId = response.userId;
       console.log("User ID:", userId);
 
-      ws = new WebSocket(
-        `wss://${BASE_URL_BACKEND.replace(
-          "https://",
-          ""
-        )}/ws?meeting_id=${meetingId}&user_id=${userId}`
-      );
+      const wsUrl = `wss://${BASE_URL_BACKEND.replace(
+        "https://",
+        ""
+      )}/ws?meeting_id=${meetingId}&user_id=${userId}`;
+
+      console.log("WebSocket URL:", wsUrl);
+
+      ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
         console.log("WebSocket Connected");
@@ -377,7 +379,7 @@ function meetingRoutines(uiType) {
       setupWebSocket();
 
       // Start the transcript processing interval
-      transcriptProcessingInterval = setInterval(debouncedDoStuff, 2000);
+      transcriptProcessingInterval = setInterval(debouncedDoStuff, 5000);
 
       // Add tab press event listener
       document.addEventListener("keydown", function (event) {
@@ -981,6 +983,18 @@ function transcriber(mutationsList, observer) {
             // Push previous person's transcript as a block
             pushBufferToTranscript();
             overWriteChromeStorage(["transcript"], false);
+
+            // Send WebSocket message
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              const formattedPayload = `${personNameBuffer} (${timeStampBuffer})\n${transcriptTextBuffer}\n`;
+              ws.send(
+                JSON.stringify({
+                  type: "transcript_update",
+                  data: formattedPayload,
+                })
+              );
+            }
+
             // Update buffers for next mutation and store transcript block timeStamp
             beforeTranscriptText = currentTranscriptText;
             personNameBuffer = currentPersonName;
@@ -998,22 +1012,6 @@ function transcriber(mutationsList, observer) {
             if (currentTranscriptText.length > 250) person.remove();
           }
         }
-
-        // After parsing the current transcript text, send it via WebSocket
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          // ${entry.personName} (${entry.timeStamp})\n${entry.transcriptText}\n
-          const formattedPayload = `${currentPersonName} (${new Date().toLocaleString(
-            "default",
-            timeFormat
-          )})\n${currentTranscriptText}\n`;
-
-          ws.send(
-            JSON.stringify({
-              type: "transcript_update",
-              data: formattedPayload,
-            })
-          );
-        }
       }
       // No people found in transcript DOM
       else {
@@ -1023,6 +1021,17 @@ function transcriber(mutationsList, observer) {
         if (personNameBuffer != "" && transcriptTextBuffer != "") {
           pushBufferToTranscript();
           overWriteChromeStorage(["transcript"], false);
+
+          // Send WebSocket message
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            const formattedPayload = `${personNameBuffer} (${timeStampBuffer})\n${transcriptTextBuffer}\n`;
+            ws.send(
+              JSON.stringify({
+                type: "transcript_update",
+                data: formattedPayload,
+              })
+            );
+          }
         }
         // Update buffers for the next person in the next mutation
         beforePersonName = "";

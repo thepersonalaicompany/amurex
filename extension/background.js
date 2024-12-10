@@ -161,7 +161,10 @@ function downloadTranscript() {
             ? `Amurex/Transcript-${result.meetingTitle} at ${result.meetingStartTimeStamp}.txt`
             : `Amurex/Transcript.txt`;
 
-        // Create an array to store lines of the text file
+        const transcriptString = JSON.stringify(result.transcript, null, 2);
+        console.log(`THIS IS THE TRANSCRIPT BEFORE SAVING TO TXT: ${transcriptString}`);
+        
+            // Create an array to store lines of the text file
         const lines = [];
 
         // Iterate through the transcript array and format each entry
@@ -193,6 +196,8 @@ function downloadTranscript() {
         const textContent = lines
           .join("\n")
           .replace(/You \(/g, result.userName + " (");
+
+        console.log(textContent);
 
         // Create a blob containing the text content
         const blob = new Blob([textContent], { type: "text/plain" });
