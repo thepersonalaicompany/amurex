@@ -321,7 +321,7 @@ document.getElementById("download-transcript").addEventListener("click", () => {
 });
 
 document.getElementById("copy-to-clipboard").addEventListener("click", () => {
-  const copyText = document.getElementById("copy-to-clipboard");
+  const copyText = document.getElementById("copy-to-clipboard-text");
   const originalText = copyText.textContent;
   
   copyText.textContent = "Copied!";

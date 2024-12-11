@@ -584,14 +584,17 @@ body {
 }
 
 .section {
-  max-height: 30%;
   display: flex;
   flex-direction: column;
+  height: 40vh;
 }
 
-#meeting-summary.card {
+
+#meeting-summary.card,
+#action-items.card {
   flex: 1;
-  min-height: 0; /* Important for flex child to properly scroll */
   overflow-y: auto;
-  margin-bottom: 0; /* Remove any bottom margin */
+  height: 40vh;
 }
+
+

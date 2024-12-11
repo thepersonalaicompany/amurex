@@ -125,6 +125,5 @@
 
 .card {
   flex: 1;
-  min-height: 0; /* Important for flex child to properly scroll */
   overflow-y: auto;
 }
