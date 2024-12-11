@@ -92,15 +92,26 @@
 
       <div class="content-wrapper">
         <div class="section">
-          <h2 style="color: rgba(255, 255, 255, 0.6)">
-            Upload Meeting Context Files
+          <h2 class="upload-heading">
+            Upload meeting context files
           </h2>
+          <p class="upload-paragraph">
+            Want to get the best out of Amurex's real-time suggestions? Just upload a file related to your meeting.
+          </p>
+          <h3 class="upload-ideas-heading">
+            Some ideas:
+          </h3>
+          <ul class="upload-list">
+            <li>Pitch or Sales Deck</li>
+            <li>Interview Questions</li>
+            <li>Cheat Sheet</li>
+          </ul>
           <div class="card">
             <div class="upload-container">
               <input
                 type="file"
                 id="file-input"
-                accept=".pdf,.txt,.docx"
+                accept=".pdf"
                 class="file-input"
               />
               <label for="file-input" class="upload-button">
@@ -127,7 +138,7 @@
                 </svg>
                 Choose context file
               </label>
-              <p class="upload-hint">Supported formats: PDF, TXT, DOCX</p>
+              <p class="upload-hint">Supported formats: PDF</p>
             </div>
             <div id="upload-status" class="upload-status"></div>
           </div>

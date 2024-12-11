@@ -87,3 +87,27 @@
   color: rgba(255, 255, 255, 0.9);
   font-size: 14px;
 }
+
+.upload-heading {
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+}
+
+.upload-paragraph {
+  /* font-size: 14px; */
+  line-height: 1.5;
+}
+
+.upload-ideas-heading {
+  margin-top: 1rem;
+  font-weight: 500;
+}
+
+.upload-list {
+  list-style-type: disc;
+  /* font-size: 14px; */
+}
+
+.upload-list li {
+  margin-bottom: 8px;
+}
