@@ -16,8 +16,7 @@ const reportErrorMessage =
   "There is a bug in Amurex. Please report it at https://discord.gg/ftUdQsHWbY";
 const mutationConfig = { childList: true, attributes: true, subtree: true };
 
-// const BASE_URL_BACKEND = "https://api.amurex.ai";
-const BASE_URL_BACKEND = "https://606d-82-163-218-33.ngrok-free.app";
+const BASE_URL_BACKEND = "https://api.amurex.ai";
 
 // Name of the person attending the meeting
 let userName = "You";
