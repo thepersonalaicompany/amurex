@@ -8,7 +8,7 @@ chrome.runtime.onInstalled.addListener(function (details) {
   if (details.reason == "install") {
     // Open welcome page in new tab
     chrome.tabs.create({
-      url: "https://app.amurex.ai/signin?welcome=true",
+      url: "https://app.amurex.ai/signup?welcome=true",
     });
   } else if (details.reason == "update") {
     let thisVersion = chrome.runtime.getManifest().version;

@@ -45,14 +45,17 @@ async function fetchAINotes() {
     };
 
     // Make API request
-    const response = await fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/generate_actions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(body),
-    });
+    const response = await fetch(
+      `${AMUREX_CONFIG.BASE_URL_BACKEND}/generate_actions`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(body),
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Server responded with ${response.status}`);
@@ -229,14 +232,50 @@ function generateEmailOptions(data) {
 }
 
 document.getElementById("download-transcript").addEventListener("click", () => {
+
   chrome.storage.local.get(
     ["transcript", "meetingTitle", "meetingStartTimeStamp"],
     function (result) {
-      if (result.transcript) {
-        chrome.runtime.sendMessage({ type: "download" });
-      } else {
-        alert("No transcript available to download");
-      }
+      const meetingId = window.location.href.includes('meetingId=') ? 
+      window.location.href.split('meetingId=')[1].split('&')[0] : 
+      'unknown';
+
+      chrome.runtime.sendMessage(
+        {
+          action: "getUserId",
+        },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.error("Error getting user id:", chrome.runtime.lastError);
+            return;
+          }
+
+          const userId = response.userId;
+
+          // Make tracking request with valid userId
+          fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/track`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({ 
+              uuid: userId, 
+              meeting_id: meetingId, 
+              event_type: "download_transcript" 
+            }),
+          }).catch(error => {
+            console.error("Error tracking download:", error);
+          });
+
+          // Handle transcript download
+          if (result.transcript) {
+            chrome.runtime.sendMessage({ type: "download" });
+          } else {
+            alert("No transcript available to download");
+          }
+        }
+      );
     }
   );
 });
