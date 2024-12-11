@@ -16,7 +16,8 @@ const reportErrorMessage =
   "There is a bug in Amurex. Please report it at https://discord.gg/ftUdQsHWbY";
 const mutationConfig = { childList: true, attributes: true, subtree: true };
 
-const BASE_URL_BACKEND = "https://api.amurex.ai";
+// const BASE_URL_BACKEND = "https://api.amurex.ai";
+const BASE_URL_BACKEND = "https://606d-82-163-218-33.ngrok-free.app";
 
 // Name of the person attending the meeting
 let userName = "You";
@@ -36,6 +37,7 @@ let beforePersonName = "",
 // Each message block(object) has personName, timeStamp and messageText key value pairs
 let chatMessages = [];
 overWriteChromeStorage(["chatMessages"], false);
+chrome.storage.local.set({ isFileUploaded: false });
 
 // Capture meeting start timestamp and sanitize special characters with "-" to avoid invalid filenames
 let meetingStartTimeStamp = new Date()
@@ -229,15 +231,21 @@ const debouncedDoStuff = async function () {
     }
 
     // Send suggestion check via WebSocket
-    ws.send(
-      JSON.stringify({
-        type: "check_suggestion",
-        data: {
-          transcript: formattedPayload,
-          user_id: userId,
-        },
-      })
-    );
+    chrome.storage.local.get(["isFileUploaded"], function(result) {
+      const isFileUploaded = result.isFileUploaded;
+      
+      // Now you can use isFileUploaded in your WebSocket message
+      ws.send(
+        JSON.stringify({
+          type: "check_suggestion",
+          data: {
+            transcript: formattedPayload,
+            user_id: userId,
+            isFileUploaded: isFileUploaded
+          },
+        })
+      );
+    });
 
     // Handle the response in WebSocket onmessage
     ws.onmessage = (event) => {

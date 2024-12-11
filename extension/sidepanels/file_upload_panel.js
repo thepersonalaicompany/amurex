@@ -82,7 +82,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const data = await response.json();
+      chrome.storage.local.set({ isFileUploaded: true });
       uploadStatus.innerHTML = `<div style="color: #4CAF50;">Upload successful!</div>`;
+      
     } catch (error) {
       uploadStatus.innerHTML = `<div style="color: #f44336;">Upload failed: ${error.message}</div>`;
     } finally {
