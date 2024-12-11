@@ -203,6 +203,28 @@ function generateEmailOptions(data) {
       .map((cb) => cb.value);
 
     try {
+   // Get meetingId from URL if available
+   const meetingId = window.location.href.includes('meetingId=') ? 
+   window.location.href.split('meetingId=')[1].split('&')[0] : 
+   'unknown';
+
+     // Get userId first
+     const userIdResponse = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        { action: "getUserId" },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            reject(chrome.runtime.lastError);
+          } else {
+            resolve(response);
+          }
+        }
+      );
+    });
+
+    const userId = userIdResponse.userId;
+
+
       const response = await fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/submit`, {
         method: "POST",
         headers: {
@@ -217,6 +239,24 @@ function generateEmailOptions(data) {
       });
 
       if (!response.ok) throw new Error("Failed to send emails");
+
+
+      await fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/track`, {
+        method: "POST", 
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          uuid: userId,
+          meeting_id: meetingId,
+          event_type: "send_emails",
+          metadata: {
+            recipient_count: selectedEmails.length
+          }
+        }),
+      });
+
 
       // Show success state
       sendButton.innerHTML = "Emails Sent Successfully &#x2713;";
@@ -279,6 +319,54 @@ document.getElementById("download-transcript").addEventListener("click", () => {
     }
   );
 });
+
+document.getElementById("copy-to-clipboard").addEventListener("click", () => {
+  chrome.storage.local.get(
+    ["transcript", "meetingTitle", "meetingStartTimeStamp"],
+    function (result) {
+      const meetingId = window.location.href.includes('meetingId=') ? 
+      window.location.href.split('meetingId=')[1].split('&')[0] : 
+      'unknown';
+
+      chrome.runtime.sendMessage(
+        {
+          action: "getUserId",
+        },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.error("Error getting user id:", chrome.runtime.lastError);
+            return;
+          }
+
+          const userId = response.userId;
+
+          // Make tracking request with valid userId
+          fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/track`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({ 
+              uuid: userId, 
+              meeting_id: meetingId, 
+              event_type: "copy_to_clipboard" 
+            }),
+          }).catch(error => {
+            console.error("Error tracking download:", error);
+          });
+
+          // Copy to clipboard
+          const meetingSummary  = document.querySelector("#meeting-summary").innerHTML;
+          const actionItems = document.querySelector("#action-items").innerHTML;
+
+          navigator.clipboard.writeText(meetingSummary + actionItems);
+        }
+      );
+    }
+  );
+});
+
 
 function updateUI(isAuthenticated) {
   console.log("isAuthenticated", isAuthenticated);
