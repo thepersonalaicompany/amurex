@@ -321,6 +321,16 @@ document.getElementById("download-transcript").addEventListener("click", () => {
 });
 
 document.getElementById("copy-to-clipboard").addEventListener("click", () => {
+  const copyText = document.getElementById("copy-to-clipboard");
+  const originalText = copyText.textContent;
+  
+  copyText.textContent = "Copied!";
+  
+  // Reset text after 2 seconds
+  setTimeout(() => {
+    copyText.textContent = originalText;
+  }, 2000);
+
   chrome.storage.local.get(
     ["transcript", "meetingTitle", "meetingStartTimeStamp"],
     function (result) {
@@ -357,8 +367,8 @@ document.getElementById("copy-to-clipboard").addEventListener("click", () => {
           });
 
           // Copy to clipboard
-          const meetingSummary  = document.querySelector("#meeting-summary").innerHTML;
-          const actionItems = document.querySelector("#action-items").innerHTML;
+          const meetingSummary  = document.querySelector("#meeting-summary").innerText;
+          const actionItems = document.querySelector("#action-items").innerText;
 
           navigator.clipboard.writeText(meetingSummary + actionItems);
         }
