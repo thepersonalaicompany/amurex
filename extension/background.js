@@ -1,4 +1,6 @@
 // Allows users to open the side panel by clicking on the action toolbar icon
+const AMUREX_BACKEND_URL = "https://api.amurex.ai";
+
 chrome.sidePanel
   .setPanelBehavior({ openPanelOnActionClick: true })
   .catch((error) => console.error(error));
@@ -121,6 +123,26 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     } else if (message.type === "open_file_upload_panel") {
       navItem = "file_upload_panel";
     } else if (message.type === "open_side_panel") {
+      // Make tracking request with valid userId
+      (async () => {
+        const userId = await getUserId();
+        if (userId) {
+          fetch(`${AMUREX_BACKEND_URL}/track`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({ 
+              uuid: userId,
+              event_type: "open_sidepanel",
+              meeting_id: "unknown"
+            }),
+          }).catch(error => {
+            console.error("Error tracking sidepanel open:", error);
+          });
+        }
+      })();
       navItem = "sidepanel";
     } else {
       console.error("Invalid side panel type");
