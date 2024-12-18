@@ -153,18 +153,97 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 });
 
 // Download transcript if meeting tab is closed
-chrome.tabs.onRemoved.addListener(function (tabid) {
-  chrome.storage.local.get(["meetingTabId"], function (data) {
-    if (tabid == data.meetingTabId) {
-      console.log("Successfully intercepted tab close");
-      // downloadTranscript()
-      // Clearing meetingTabId to prevent misfires of onRemoved until next meeting actually starts
-      chrome.storage.local.set({ meetingTabId: null }, function () {
-        console.log("Meeting tab id cleared for next meeting");
+chrome.tabs.onRemoved.addListener(async function (tabid) {
+  const data = await chrome.storage.local.get(["meetingTabId"]);
+  
+  if (tabid == data.meetingTabId) {
+    console.log("Successfully intercepted tab close");
+    
+    // Create new tab and wait for it
+    const newTab = await chrome.tabs.create({ 
+      url: "https://meet.google.com/landing" 
+    });
+
+    // Wait a bit for the page to start loading
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Execute script in the new tab
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: newTab.id },
+        function: injectButton,
       });
+      console.log("Button injection script executed");
+    } catch (error) {
+      console.error("Error injecting button:", error);
     }
-  });
+
+    // Clear meetingTabId
+    await chrome.storage.local.set({ meetingTabId: null });
+    console.log("Meeting tab id cleared for next meeting");
+  }
 });
+
+// Function to inject button into the page
+async function injectButton() {
+  // Wait for the document body to be available
+  if (!document.body) {
+    await new Promise(resolve => {
+      const observer = new MutationObserver((mutations, obs) => {
+        if (document.body) {
+          obs.disconnect();
+          resolve();
+        }
+      });
+      
+      observer.observe(document.documentElement, {
+        childList: true,
+        subtree: true
+      });
+    });
+  }
+
+  console.log("Injecting button");
+  const button = document.createElement('button');
+  
+  button.textContent = 'Show Last Meeting Summary';
+  button.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    padding: 8px 16px;
+    background: #c76dcc;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: "Host Grotesk", sans-serif;
+    font-weight: 500;
+    transition: background 0.2s;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+  `;
+  
+  button.addEventListener('mouseover', () => {
+    button.style.background = '#d180d6';
+  });
+
+  button.addEventListener('mouseout', () => {
+    button.style.background = '#c76dcc';
+  });
+  
+  button.addEventListener('click', () => {
+    console.log("purple button clicked");
+    chrome.runtime.sendMessage({ type: 'open_side_panel' });
+  });
+  
+  document.body.appendChild(button);
+
+  // Wait a short moment then click the button
+  setTimeout(() => {
+    button.click();
+  }, 1500);
+}
 
 function downloadTranscript() {
   chrome.storage.local.get(

@@ -17,7 +17,7 @@
       "exclude_matches": ["https://meet.google.com/"]
     }
   ],
-  "permissions": ["storage", "downloads", "sidePanel", "cookies"],
+  "permissions": ["storage", "downloads", "sidePanel", "cookies", "scripting"],
   "host_permissions": [
     "https://meet.google.com/*",
     "https://www.googleapis.com/*",
