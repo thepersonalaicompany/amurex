@@ -23,7 +23,7 @@
       "exclude_matches": ["https://teams.live.com/"]
     }
   ],
-  "permissions": ["storage", "downloads", "sidePanel", "cookies"],
+  "permissions": ["storage", "downloads", "sidePanel", "cookies", "scripting"],
   "host_permissions": [
     "https://meet.google.com/*",
     "https://teams.live.com/*",
