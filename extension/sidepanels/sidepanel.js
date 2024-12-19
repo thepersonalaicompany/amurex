@@ -370,7 +370,7 @@ document.getElementById("copy-to-clipboard").addEventListener("click", () => {
           const meetingSummary  = document.querySelector("#meeting-summary").innerText;
           const actionItems = document.querySelector("#action-items").innerText;
 
-          navigator.clipboard.writeText(meetingSummary + actionItems);
+          navigator.clipboard.writeText(actionItems + "\n" + meetingSummary);
         }
       );
     }
