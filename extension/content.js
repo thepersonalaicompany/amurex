@@ -549,7 +549,8 @@ function meetingRoutines(uiType) {
           }
 
           // Clear meetingQA from storage
-          chrome.storage.local.set({ meetingQA: [] }, function () {
+          console.log("Setting hasMeetingEnded to true");
+          chrome.storage.local.set({ meetingQA: [], hasMeetingEnded: true }, function () {
             console.log("Meeting QA cleared due to meeting end");
           });
 
@@ -565,10 +566,12 @@ function meetingRoutines(uiType) {
             "Saving to chrome storage and sending message to download transcript from background script"
           );
 
+          chrome.runtime.sendMessage({ type: "meeting_ended" });
           chrome.runtime.sendMessage({ type: "open_side_panel" });
 
           // can you send a notification to user saying that we are processing the transcript?
           overWriteChromeStorage(["transcript", "chatMessages"], true);
+          
           // showSidebar();
           // we will need to make an API call here to save the transcript to the cloud
         });

@@ -82,7 +82,12 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 
     return true;
     // };
-  } else if (
+  } else if ( message.type === "meeting_ended") {
+    chrome.storage.local.set({ hasMeetingEnded: true }, function () {
+      console.log("Meeting ended flag set");
+    });
+  } 
+    else if (
     message.type === "open_side_panel" ||
     message.type === "open_late_meeting_side_panel" ||
     message.type === "open_file_upload_panel"
@@ -152,12 +157,25 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   }
 });
 
+
 // Download transcript if meeting tab is closed
 chrome.tabs.onRemoved.addListener(async function (tabid) {
-  const data = await chrome.storage.local.get(["meetingTabId"]);
+  const data = await chrome.storage.local.get(["meetingTabId", "hasMeetingEnded"]);
+  console.log("Data:", data);
   
   if (tabid == data.meetingTabId) {
     console.log("Successfully intercepted tab close");
+    
+    // Check if it was a meeting page using storage flag
+    if (data.hasMeetingEnded) {
+      console.log("Meeting ended, skipping notification");
+      await chrome.storage.local.set({ 
+        meetingTabId: null,
+        hasMeetingEnded: false 
+      });
+      console.log("Meeting tab id cleared for next meeting");
+      return;
+    }
     
     // Create new tab and wait for it
     const newTab = await chrome.tabs.create({ 
@@ -171,21 +189,24 @@ chrome.tabs.onRemoved.addListener(async function (tabid) {
     try {
       await chrome.scripting.executeScript({
         target: { tabId: newTab.id },
-        function: injectButton,
+        function: injectNotification,
       });
-      console.log("Button injection script executed");
+      console.log("Notification injection script executed");
     } catch (error) {
-      console.error("Error injecting button:", error);
+      console.error("Error injecting notification:", error);
     }
 
-    // Clear meetingTabId
-    await chrome.storage.local.set({ meetingTabId: null });
+    // Clear meetingTabId and hasMeetingEnded flags
+    await chrome.storage.local.set({ 
+      meetingTabId: null,
+      hasMeetingEnded: false 
+    });
     console.log("Meeting tab id cleared for next meeting");
   }
 });
 
-// Function to inject button into the page
-async function injectButton() {
+// Function to inject notification into the page
+async function injectNotification() {
   // Wait for the document body to be available
   if (!document.body) {
     await new Promise(resolve => {
@@ -203,46 +224,102 @@ async function injectButton() {
     });
   }
 
-  console.log("Injecting button");
-  const button = document.createElement('button');
-  
-  button.textContent = 'Show Last Meeting Summary';
-  button.style.cssText = `
+  console.log("Injecting notification");
+  let html = document.querySelector("html");
+  let obj = document.createElement("div");
+  obj.id = "live-notification";
+  let logo = document.createElement("img");
+  let text = document.createElement("p");
+  let buttonContainer = document.createElement("div");
+
+  // Style the container
+  obj.style.cssText = `
     position: fixed;
     top: 20px;
-    right: 20px;
+    right: 50%;
+    transform: translateX(50%);
+    background: black;
+    padding: 20px;
+    border-radius: 8px;
     z-index: 10000;
-    padding: 8px 16px;
-    background: #c76dcc;
+    width: 400px;
+    font-family: "Host Grotesk", sans-serif;
+  `;
+
+  // Style logo
+  logo.setAttribute(
+    "src",
+    "https://www.amurex.ai/_next/image?url=%2F_next%2Fstatic%2Fmedia%2FAmurexLogo.56901b87.png&w=64&q=75"
+  );
+  logo.setAttribute("height", "32px");
+  logo.setAttribute("width", "32px");
+  logo.style.cssText = "border-radius: 4px";
+
+  // Style text
+  text.style.cssText = `
+    color: #fff;
+    margin: 10px 0;
+  `;
+  text.innerHTML = "Meeting ended. Would you like to see the summary and action items?";
+
+  // Style button container
+  buttonContainer.style.cssText = "display: flex; gap: 10px; margin-top: 10px;";
+
+  // Create Yes button
+  let yesButton = document.createElement("button");
+  yesButton.textContent = "Yes";
+  yesButton.style.cssText = `
+    background: rgb(209, 173, 211);
     color: white;
     border: none;
+    padding: 5px 15px;
     border-radius: 4px;
     cursor: pointer;
     font-family: "Host Grotesk", sans-serif;
     font-weight: 500;
-    transition: background 0.2s;
-    box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
   `;
-  
-  button.addEventListener('mouseover', () => {
-    button.style.background = '#d180d6';
+
+  // Create No button
+  let noButton = document.createElement("button");
+  noButton.id = "no-button";
+  noButton.textContent = "No";
+  noButton.style.cssText = `
+    background: transparent;
+    color: rgb(209, 173, 211);
+    border: 1px solid rgb(209, 173, 211);
+    padding: 5px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: "Host Grotesk", sans-serif;
+    font-weight: 500;
+  `;
+
+  // Add click handlers
+  yesButton.addEventListener("click", () => {
+    console.log("Yes button clicked");
+    chrome.runtime.sendMessage({ type: "open_side_panel" });
+    obj.remove();
   });
 
-  button.addEventListener('mouseout', () => {
-    button.style.background = '#c76dcc';
+  noButton.addEventListener("click", () => {
+    obj.remove();
   });
-  
-  button.addEventListener('click', () => {
-    console.log("purple button clicked");
-    chrome.runtime.sendMessage({ type: 'open_side_panel' });
-  });
-  
-  document.body.appendChild(button);
 
-  // Wait a short moment then click the button
+  // Assemble the components
+  obj.appendChild(logo);
+  obj.appendChild(text);
+  obj.appendChild(buttonContainer);
+  buttonContainer.appendChild(yesButton);
+  buttonContainer.appendChild(noButton);
+
+  if (html) html.append(obj);
+
+  // Auto-hide after 4 seconds
   setTimeout(() => {
-    button.click();
-  }, 1500);
+    if (obj && obj.parentNode) {
+      obj.remove();
+    }
+  }, 4000);
 }
 
 function downloadTranscript() {
@@ -347,3 +424,4 @@ chrome.action.onClicked.addListener(async (tab) => {
   });
   chrome.sidePanel.open({ tabId: tab.id });
 });
+
