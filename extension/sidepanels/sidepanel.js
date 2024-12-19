@@ -367,10 +367,37 @@ document.getElementById("copy-to-clipboard").addEventListener("click", () => {
           });
 
           // Copy to clipboard
-          const meetingSummary  = document.querySelector("#meeting-summary").innerText;
+          const meetingSummary = document.querySelector("#meeting-summary").innerText;
           const actionItems = document.querySelector("#action-items").innerText;
 
-          navigator.clipboard.writeText(actionItems + "\n" + meetingSummary);
+          // Clean and format the content
+          const cleanActionItems = actionItems
+            .split('\n')
+            .filter(item => item.trim() && !item.startsWith('#')) // Remove empty lines and headers
+            .map(line => {
+              // If line starts with * or -, convert to checkbox format
+              if (line.match(/^[*-]/)) {
+                return line.replace(/^[*-]+\s*/, '- [ ] ').trim();
+              }
+              // If no marker, add checkbox format
+              return `- [ ] ${line.trim()}`;
+            })
+            .join('\n');
+
+          const cleanSummary = meetingSummary
+            .split('\n')
+            .filter(line => line.trim() && !line.startsWith('#')) // Remove empty lines and headers
+            .map(line => {
+              // If line starts with * or -, keep the marker but clean up extra spaces
+              if (line.match(/^[*-]/)) {
+                return line.replace(/^([*-]+)\s*/, '$1 ').trim();
+              }
+              return line.trim();
+            })
+            .join('\n');
+
+          const markdownText = `## Action Items\n${cleanActionItems}\n\n## Meeting Summary\n${cleanSummary}`;
+          navigator.clipboard.writeText(markdownText);
         }
       );
     }
