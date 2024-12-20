@@ -98,14 +98,13 @@ Take control of your meetings with Amurex, and let it handle the busywork while 
    };
    window.AMUREX_CONFIG = AMUREX_CONFIG;
    ```
-   - Create `config_background.js` in the extension root:
+   - Navigate to `background.js` in the extension root. This file is used by the service worker to communicate with the backend.
    ```javascript
    const AMUREX_CONFIG = {
      BASE_URL_BACKEND: "http://localhost:8080",  // Your backend server URL
      BASE_URL_WEB: "http://localhost:8080",      // Your web server URL
      ANALYTICS_ENABLED: true                     // Set to false to disable tracking
    };
-   self.AMUREX_CONFIG = AMUREX_CONFIG;
    ```
 3. Navigate to the [`backend`](https://github.com/thepersonalaicompany/amurex-backend) repository
 4. Follow the backend setup instructions in its `README.md`
