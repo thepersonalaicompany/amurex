@@ -1,5 +1,9 @@
-// Allows users to open the side panel by clicking on the action toolbar icon
-const AMUREX_BACKEND_URL = "https://api.amurex.ai";
+const AMUREX_CONFIG = {
+  // there is one more config in the content.js script
+  BASE_URL_BACKEND: "https://api.amurex.ai",
+  BASE_URL_WEB: "https://app.amurex.ai",
+  ANALYTICS_ENABLED: true
+};
 
 chrome.sidePanel
   .setPanelBehavior({ openPanelOnActionClick: true })
@@ -10,7 +14,7 @@ chrome.runtime.onInstalled.addListener(function (details) {
   if (details.reason == "install") {
     // Open welcome page in new tab
     chrome.tabs.create({
-      url: "https://app.amurex.ai/signup?welcome=true",
+      url: AMUREX_CONFIG.BASE_URL_WEB + "/signup?welcome=true",
     });
   } else if (details.reason == "update") {
     let thisVersion = chrome.runtime.getManifest().version;
@@ -21,18 +25,8 @@ chrome.runtime.onInstalled.addListener(function (details) {
 });
 
 async function getUserId() {
-  let session = await chrome.cookies.get({
-    url: "http://localhost:3000",
-    name: "amurex_session",
-  });
-  if (session && session.value) {
-    const decodedSession = JSON.parse(decodeURIComponent(session.value));
-    const userId = decodedSession.user.id;
-    return userId;
-  }
-
   session = await chrome.cookies.get({
-    url: "https://app.amurex.ai",
+    url: AMUREX_CONFIG.BASE_URL_WEB,
     name: "amurex_session",
   });
   if (session && session.value) {
@@ -132,7 +126,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
       (async () => {
         const userId = await getUserId();
         if (userId) {
-          fetch(`${AMUREX_BACKEND_URL}/track`, {
+          fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/track`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

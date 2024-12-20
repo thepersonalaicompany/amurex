@@ -240,23 +240,24 @@ function generateEmailOptions(data) {
 
       if (!response.ok) throw new Error("Failed to send emails");
 
-
-      await fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/track`, {
-        method: "POST", 
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          uuid: userId,
-          meeting_id: meetingId,
-          event_type: "send_emails",
-          metadata: {
-            recipient_count: selectedEmails.length
-          }
-        }),
-      });
-
+      // Track email sending only if analytics is enabled
+      if (AMUREX_CONFIG.ANALYTICS_ENABLED) {
+        await fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/track`, {
+          method: "POST", 
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            uuid: userId,
+            meeting_id: meetingId,
+            event_type: "send_emails",
+            metadata: {
+              recipient_count: selectedEmails.length
+            }
+          }),
+        });
+      }
 
       // Show success state
       sendButton.innerHTML = "Emails Sent Successfully &#x2713;";
@@ -292,21 +293,23 @@ document.getElementById("download-transcript").addEventListener("click", () => {
 
           const userId = response.userId;
 
-          // Make tracking request with valid userId
-          fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/track`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            body: JSON.stringify({ 
-              uuid: userId, 
-              meeting_id: meetingId, 
-              event_type: "download_transcript" 
-            }),
-          }).catch(error => {
-            console.error("Error tracking download:", error);
-          });
+          // Make tracking request only if analytics is enabled
+          if (AMUREX_CONFIG.ANALYTICS_ENABLED) {
+            fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/track`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              body: JSON.stringify({ 
+                uuid: userId, 
+                meeting_id: meetingId, 
+                event_type: "download_transcript" 
+              }),
+            }).catch(error => {
+              console.error("Error tracking download:", error);
+            });
+          }
 
           // Handle transcript download
           if (result.transcript) {
@@ -350,21 +353,23 @@ document.getElementById("copy-to-clipboard").addEventListener("click", () => {
 
           const userId = response.userId;
 
-          // Make tracking request with valid userId
-          fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/track`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            body: JSON.stringify({ 
-              uuid: userId, 
-              meeting_id: meetingId, 
-              event_type: "copy_to_clipboard" 
-            }),
-          }).catch(error => {
-            console.error("Error tracking download:", error);
-          });
+          // Make tracking request only if analytics is enabled
+          if (AMUREX_CONFIG.ANALYTICS_ENABLED) {
+            fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/track`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              body: JSON.stringify({ 
+                uuid: userId, 
+                meeting_id: meetingId, 
+                event_type: "copy_to_clipboard" 
+              }),
+            }).catch(error => {
+              console.error("Error tracking copy to clipboard:", error);
+            });
+          }
 
           // Copy to clipboard
           const meetingSummary = document.querySelector("#meeting-summary").innerText;

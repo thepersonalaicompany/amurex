@@ -88,11 +88,28 @@ Take control of your meetings with Amurex, and let it handle the busywork while 
 
 ## Self Hosting
 1. Clone the repository
-2. Load the unpacked extension
-3. Navigate to the [`backend`](https://github.com/thepersonalaicompany/amurex-backend) repository.
-4. Use one of the options from `README.md` to run the server
-5. Change the `BASE_URL_BACKEND` in `extension/sidepanels/config.js` to the URL of the backend server, Most likely `http://localhost:8080`
-6. Change the `BASE_URL_WEB` variable in the `extension/conent.js` to the URL of the backend server. Most likely `http://localhost:8080`
+2. Configure the extension:
+   - Create `config.js` in the extension root:
+   ```javascript
+   const AMUREX_CONFIG = {
+     BASE_URL_BACKEND: "http://localhost:8080",  // Your backend server URL
+     BASE_URL_WEB: "http://localhost:8080",      // Your web server URL
+     ANALYTICS_ENABLED: true                     // Set to false to disable tracking
+   };
+   window.AMUREX_CONFIG = AMUREX_CONFIG;
+   ```
+   - Create `config_background.js` in the extension root:
+   ```javascript
+   const AMUREX_CONFIG = {
+     BASE_URL_BACKEND: "http://localhost:8080",  // Your backend server URL
+     BASE_URL_WEB: "http://localhost:8080",      // Your web server URL
+     ANALYTICS_ENABLED: true                     // Set to false to disable tracking
+   };
+   self.AMUREX_CONFIG = AMUREX_CONFIG;
+   ```
+3. Navigate to the [`backend`](https://github.com/thepersonalaicompany/amurex-backend) repository
+4. Follow the backend setup instructions in its `README.md`
+5. Load the unpacked extension in Chrome
 
 ## Using the development version
 
