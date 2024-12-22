@@ -491,3 +491,85 @@ document.getElementById("settings-btn").addEventListener("click", () => {
     url: `${AMUREX_CONFIG.BASE_URL_WEB}/settings`,
   });
 });
+
+// Add dropdown functionality
+const exportButton = document.getElementById('export-button');
+const dropdown = exportButton.closest('.dropdown');
+
+exportButton.addEventListener('click', () => {
+  dropdown.classList.toggle('active');
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  if (!dropdown.contains(e.target)) {
+    dropdown.classList.remove('active');
+  }
+});
+
+// Share to apps functionality
+document.getElementById('share-to-apps').addEventListener('click', () => {
+  const meetingId = window.location.href.includes('meetingId=') ? 
+    window.location.href.split('meetingId=')[1].split('&')[0] : 
+    'unknown';
+
+  chrome.runtime.sendMessage(
+    {
+      action: "getUserId",
+    },
+    (response) => {
+      if (chrome.runtime.lastError) {
+        console.error("Error getting user id:", chrome.runtime.lastError);
+        return;
+      }
+
+      const userId = response.userId;
+
+      // Make tracking request only if analytics is enabled
+      if (AMUREX_CONFIG.ANALYTICS_ENABLED) {
+        fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/track`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ 
+            uuid: userId, 
+            meeting_id: meetingId, 
+            event_type: "share_to_apps" 
+          }),
+        }).catch(error => {
+          console.error("Error tracking share:", error);
+        });
+      }
+
+      // Get transcript from storage
+      chrome.storage.local.get(["transcript"], function(result) {
+        if (!result.transcript) {
+          alert("No transcript available to share");
+          return;
+        }
+
+        const shareOptions = {
+          text: result.transcript,
+          title: 'Meeting Transcript'
+        };
+
+        if (navigator.canShare && navigator.canShare(shareOptions)) {
+          navigator.share(shareOptions)
+            .then(() => {
+              console.log('Shared successfully');
+              dropdown.classList.remove('active');
+            })
+            .catch((error) => {
+              if (error.name !== 'AbortError') {
+                console.error('Error sharing:', error);
+              }
+            });
+        } else {
+          alert('Web Share API is not supported in your browser');
+        }
+      });
+    }
+  );
+});
