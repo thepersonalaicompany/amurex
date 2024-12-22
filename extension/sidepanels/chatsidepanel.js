@@ -26,7 +26,7 @@ function updateQADisplay() {
     const summaryDiv = document.getElementById("meeting-summary");
     
     if (qaHistory.length === 0) {
-      summaryDiv.innerHTML = '<div class="loading-placeholder">No questions generated yet.  <a href="file_upload_panel.html" class="upload-button" style="color: #c76dcc; text-decoration: none; font-weight: 500;">Upload context files</a> to get started.</div>';
+      summaryDiv.innerHTML = '<div class="loading-placeholder">No questions generated yet.  <a href="file_upload_panel.html" class="upload-button" style="color: #9334E9; text-decoration: none; font-weight: 500;">Upload context files</a> to get started.</div>';
       return;
     }
 
