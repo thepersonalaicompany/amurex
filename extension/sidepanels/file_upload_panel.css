@@ -13,7 +13,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #c76dcc;
+  background: #9334E9;
   color: white;
   padding: 12px 24px;
   border-radius: 8px;
@@ -25,7 +25,7 @@
 }
 
 .upload-button:hover {
-  background: #c76dcc;
+  background: #9334E9;
 }
 
 .upload-hint {
@@ -88,8 +88,13 @@
   font-size: 14px;
 }
 
+.content-wrapper {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
 .upload-heading {
-  color: rgba(255, 255, 255, 0.6);
+  color: #fafafa;
   font-weight: 600;
 }
 
@@ -110,4 +115,10 @@
 
 .upload-list li {
   margin-bottom: 8px;
+}
+
+.section {
+  padding-left: 12px;
+  padding-right: 12px;
+  height: 100%;
 }
