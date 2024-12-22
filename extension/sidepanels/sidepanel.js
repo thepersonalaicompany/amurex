@@ -325,90 +325,135 @@ document.getElementById("download-transcript").addEventListener("click", () => {
 
 document.getElementById("copy-to-clipboard").addEventListener("click", () => {
   const copyText = document.getElementById("copy-to-clipboard-text");
-  const originalText = copyText.textContent;
+  const originalText = copyText ? copyText.textContent : '';
   
-  copyText.textContent = "Copied!";
-  
-  // Reset text after 2 seconds
-  setTimeout(() => {
-    copyText.textContent = originalText;
-  }, 2000);
+  if (copyText) {
+    copyText.textContent = "Copied!";
+    
+    // Reset text after 2 seconds
+    setTimeout(() => {
+      copyText.textContent = originalText;
+    }, 2000);
+  }
 
-  chrome.storage.local.get(
-    ["transcript", "meetingTitle", "meetingStartTimeStamp"],
-    function (result) {
-      const meetingId = window.location.href.includes('meetingId=') ? 
-      window.location.href.split('meetingId=')[1].split('&')[0] : 
-      'unknown';
+  const meetingId = window.location.href.includes('meetingId=') ? 
+    window.location.href.split('meetingId=')[1].split('&')[0] : 
+    'unknown';
 
-      chrome.runtime.sendMessage(
-        {
-          action: "getUserId",
-        },
-        (response) => {
-          if (chrome.runtime.lastError) {
-            console.error("Error getting user id:", chrome.runtime.lastError);
-            return;
+  chrome.runtime.sendMessage(
+    {
+      action: "getUserId",
+    },
+    (response) => {
+      if (chrome.runtime.lastError) {
+        console.error("Error getting user id:", chrome.runtime.lastError);
+        return;
+      }
+
+      const userId = response.userId;
+
+      // Make tracking request only if analytics is enabled
+      if (AMUREX_CONFIG.ANALYTICS_ENABLED) {
+        fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/track`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ 
+            uuid: userId, 
+            meeting_id: meetingId, 
+            event_type: "copy_to_clipboard" 
+          }),
+        }).catch(error => {
+          console.error("Error tracking copy to clipboard:", error);
+        });
+      }
+
+      // Get and clean the content
+      const actionItems = document.getElementById('action-items').innerText;
+      const meetingSummary = document.getElementById('meeting-summary').innerText;
+
+      // Clean and format action items
+      const cleanActionItems = actionItems
+        .split('\n')
+        .filter(item => item.trim() && !item.startsWith('#')) // Remove empty lines and headers
+        .map(line => {
+          // If line starts with * or -, convert to checkbox format
+          if (line.match(/^[*-]/)) {
+            return line.replace(/^[*-]+\s*/, '- [ ] ').trim();
           }
+          // If no marker, add checkbox format
+          return `- [ ] ${line.trim()}`;
+        })
+        .join('\n');
 
-          const userId = response.userId;
-
-          // Make tracking request only if analytics is enabled
-          if (AMUREX_CONFIG.ANALYTICS_ENABLED) {
-            fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/track`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
-              body: JSON.stringify({ 
-                uuid: userId, 
-                meeting_id: meetingId, 
-                event_type: "copy_to_clipboard" 
-              }),
-            }).catch(error => {
-              console.error("Error tracking copy to clipboard:", error);
-            });
+      // Clean and format summary
+      const cleanSummary = meetingSummary
+        .split('\n')
+        .filter(line => line.trim() && !line.startsWith('#')) // Remove empty lines and headers
+        .map(line => {
+          // If line starts with * or -, keep the marker but clean up extra spaces
+          if (line.match(/^[*-]/)) {
+            return line.replace(/^([*-]+)\s*/, '$1 ').trim();
           }
+          return line.trim();
+        })
+        .join('\n');
 
-          // Copy to clipboard
-          const meetingSummary = document.querySelector("#meeting-summary").innerText;
-          const actionItems = document.querySelector("#action-items").innerText;
-
-          // Clean and format the content
-          const cleanActionItems = actionItems
-            .split('\n')
-            .filter(item => item.trim() && !item.startsWith('#')) // Remove empty lines and headers
-            .map(line => {
-              // If line starts with * or -, convert to checkbox format
-              if (line.match(/^[*-]/)) {
-                return line.replace(/^[*-]+\s*/, '- [ ] ').trim();
-              }
-              // If no marker, add checkbox format
-              return `- [ ] ${line.trim()}`;
-            })
-            .join('\n');
-
-          const cleanSummary = meetingSummary
-            .split('\n')
-            .filter(line => line.trim() && !line.startsWith('#')) // Remove empty lines and headers
-            .map(line => {
-              // If line starts with * or -, keep the marker but clean up extra spaces
-              if (line.match(/^[*-]/)) {
-                return line.replace(/^([*-]+)\s*/, '$1 ').trim();
-              }
-              return line.trim();
-            })
-            .join('\n');
-
-          const markdownText = `## Action Items\n${cleanActionItems}\n\n## Meeting Summary\n${cleanSummary}`;
-          navigator.clipboard.writeText(markdownText);
-        }
-      );
+      const markdownText = `## Action Items\n${cleanActionItems}\n\n## Meeting Summary\n${cleanSummary}`;
+      
+      navigator.clipboard.writeText(markdownText).then(() => {
+        // Visual feedback
+        const button = document.getElementById('copy-to-clipboard');
+        button.style.background = 'rgba(147, 51, 234, 0.1)';
+        button.style.color = '#9333EA';
+        setTimeout(() => {
+          button.style.background = '';
+          button.style.color = '';
+        }, 1000);
+      });
     }
   );
 });
 
+// Copy buttons functionality
+document.querySelectorAll('.copy-btn').forEach(button => {
+  button.addEventListener('click', function() {
+    const section = this.closest('.section');
+    const contentDiv = section.querySelector('.card');
+    const text = contentDiv.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      // Visual feedback
+      button.style.color = '#9333EA';
+      setTimeout(() => {
+        button.style.color = '';
+      }, 1000);
+    });
+  });
+});
+
+// Edit buttons functionality
+document.querySelectorAll('.edit-btn').forEach(button => {
+  button.addEventListener('click', function() {
+    const section = this.closest('.section');
+    const contentDiv = section.querySelector('.card');
+    
+    // Toggle contenteditable
+    const isEditable = contentDiv.contentEditable === 'true';
+    contentDiv.contentEditable = !isEditable;
+    
+    // Visual feedback
+    if (!isEditable) {
+      button.style.color = '#9333EA';
+      contentDiv.style.outline = '2px solid rgba(147, 51, 234, 0.5)';
+      contentDiv.style.borderRadius = '6px';
+    } else {
+      button.style.color = '';
+      contentDiv.style.outline = '';
+    }
+  });
+});
 
 function updateUI(isAuthenticated) {
   console.log("isAuthenticated", isAuthenticated);

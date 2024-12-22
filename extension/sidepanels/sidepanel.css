@@ -5,7 +5,7 @@ body {
   font-family: 'Inter', sans-serif;
   margin: 0;
   padding: 0;
-  background: #121212;
+  background: #09090B;
   color: #ffffff;
   height: 100vh;
   overflow: hidden;
@@ -16,7 +16,7 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  background: #1e1e1e;
+  background: #09090B;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   z-index: 100;
 }
@@ -45,8 +45,8 @@ body {
   border: none;
   padding: 8px;
   cursor: pointer;
-  color: rgba(255, 255, 255, 0.6);
-  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -54,7 +54,7 @@ body {
 }
 
 .settings-btn:hover {
-  background: rgba(209, 173, 211, 0.1);
+  background: rgba(199, 109, 204, 0.1);
   color: #c76dcc;
 }
 
@@ -88,10 +88,8 @@ body {
   min-height: 120px;
   overflow-y: auto;
   color: rgba(255, 255, 255, 0.9);
-  border-radius: 8px;
   padding: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: #1e1e1e;
+  background: #1E1E1E;
 }
 
 #meeting-summary[contenteditable="true"] {
@@ -142,16 +140,13 @@ body {
 }
 
 .card {
-  background: #1e1e1e;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 24px;
+  margin-bottom: 24px;
 }
 
 .loading-placeholder {
   color: rgba(255, 255, 255, 0.6);
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .action-btn {
@@ -169,13 +164,11 @@ body {
   font-size: 0.9rem;
   font-weight: 700;
   width: 100%;
-  box-shadow: 0 1px 3px rgba(82, 82, 82, 0.5);
   transition: background 0.2s;
 }
 
 .action-btn:hover {
   background: #c76dcc;
-  box-shadow: 0 2px 3px rgba(82, 82, 82, 0.5);
 }
 
 .auth-container {
@@ -542,12 +535,12 @@ body {
   left: 0;
   right: 0;
   height: 60px;
-  background: #1e1e1e;
+  background: #09090B;
   display: flex;
   justify-content: space-around;
   align-items: center;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px 16px;
 }
 
 .nav-item {
@@ -555,24 +548,33 @@ body {
   flex-direction: column;
   align-items: center;
   text-decoration: none;
-  color: #666;
-  padding: 8px;
-  transition: color 0.3s;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  gap: 4px;
+  min-width: 64px;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .nav-item.active {
-  color: #c76dcc;
+  color: #9334E9;
+  background: rgba(147, 51, 234, 0.1);
 }
 
 .nav-icon {
-  width: 24px;
-  height: 24px;
-  margin-bottom: 4px;
+  width: 20px;
+  height: 20px;
 }
 
 .nav-label {
   font-size: 12px;
   font-weight: 500;
+  margin-top: 2px;
 }
 
 .content-wrapper {
@@ -587,6 +589,9 @@ body {
   display: flex;
   flex-direction: column;
   height: 40vh;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  margin-bottom: 16px;
 }
 
 
@@ -595,6 +600,123 @@ body {
   flex: 1;
   overflow-y: auto;
   height: 40vh;
+  background: #09090B;
+  color: rgba(255, 255, 255, 0.9);
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.button-group {
+  display: flex;
+  gap: 12px;
+  padding-bottom: 12px;
+  background: #09090B;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #09090B;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  flex: 1;
+  transition: background 0.2s;
+}
+
+.action-btn:hover {
+  background: #2A2A2A;
+}
+
+.action-btn.purple {
+  background: #9334E9;
+  border: none;
+}
+
+.action-btn.purple:hover {
+  background: #9334E9;
+}
+
+.action-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+
+/* Update text colors */
+h2 {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.loading-placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.section-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.6);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.icon-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.icon-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.copy-btn:hover {
+  color: #8B5CF6;
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.edit-btn:hover {
+  color: #8B5CF6;
+  background: rgba(139, 92, 246, 0.1);
+}
+
+/* Date, Time, Attendees styling */
+.metadata {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 16px;
+  margin-bottom: 16px;
+}
+
+/* Content text styling */
+.content-text {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+  line-height: 1.5;
 }
 
 
