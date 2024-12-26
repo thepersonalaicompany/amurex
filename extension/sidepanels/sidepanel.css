@@ -150,25 +150,34 @@ body {
 }
 
 .action-btn {
-  display: flex;
+  width: 100%;
+  padding: 8px 16px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: #c76dcc;
-  color: white;
-  border: 1px solid #c76dcc;
-  padding: 12px 16px;
-  border-radius: 6px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #09090B;
+  color: #FAFAFA;
   cursor: pointer;
-  font-family: "Host Grotesk", sans-serif;
-  font-size: 0.9rem;
-  font-weight: 700;
-  width: 100%;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.action-btn.purple {
+  background: #7C3AED;
+  border-color: #7C3AED;
 }
 
 .action-btn:hover {
-  background: #c76dcc;
+  background: #27272A;
+}
+
+.action-btn.purple:hover {
+  background: #6D28D9;
 }
 
 .auth-container {
@@ -608,27 +617,30 @@ body {
 
 .button-group {
   display: flex;
-  gap: 12px;
-  padding-bottom: 12px;
-  background: #09090B;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.button-group > * {
+  flex: 1;
 }
 
 .action-btn {
-  display: flex;
+  width: 100%;
+  padding: 8px 16px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: #09090B;
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 12px;
   border-radius: 8px;
-  cursor: pointer;
-  font-family: "Inter", sans-serif;
   font-size: 14px;
   font-weight: 500;
-  flex: 1;
-  transition: background 0.2s;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #09090B;
+  color: #FAFAFA;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .action-btn:hover {
@@ -721,7 +733,6 @@ h2 {
 
 .dropdown {
   position: relative;
-  flex: 1;
 }
 
 .dropdown-arrow {
@@ -744,6 +755,7 @@ h2 {
   padding: 4px;
   display: none;
   z-index: 100;
+  width: 100%;
 }
 
 .dropdown.active .dropdown-menu {
