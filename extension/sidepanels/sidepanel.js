@@ -493,17 +493,17 @@ document.getElementById("settings-btn").addEventListener("click", () => {
 });
 
 // Add dropdown functionality
-const exportButton = document.getElementById('export-button');
-const dropdown = exportButton.closest('.dropdown');
+const copyButton = document.getElementById('copy-button');
+const copyDropdown = copyButton.closest('.dropdown');
 
-exportButton.addEventListener('click', () => {
-  dropdown.classList.toggle('active');
+copyButton.addEventListener('click', () => {
+  copyDropdown.classList.toggle('active');
 });
 
 // Close dropdown when clicking outside
 document.addEventListener('click', (e) => {
-  if (!dropdown.contains(e.target)) {
-    dropdown.classList.remove('active');
+  if (!copyDropdown.contains(e.target)) {
+    copyDropdown.classList.remove('active');
   }
 });
 
@@ -543,33 +543,58 @@ document.getElementById('share-to-apps').addEventListener('click', () => {
         });
       }
 
-      // Get transcript from storage
-      chrome.storage.local.get(["transcript"], function(result) {
-        if (!result.transcript) {
-          alert("No transcript available to share");
-          return;
-        }
+      // Get and format content for sharing
+      const actionItems = document.getElementById('action-items').innerText;
+      const meetingSummary = document.getElementById('meeting-summary').innerText;
 
-        const shareOptions = {
-          text: result.transcript,
-          title: 'Meeting Transcript'
-        };
+      // Clean and format action items
+      const cleanActionItems = actionItems
+        .split('\n')
+        .filter(item => item.trim() && !item.startsWith('#')) // Remove empty lines and headers
+        .map(line => {
+          // If line starts with * or -, convert to checkbox format
+          if (line.match(/^[*-]/)) {
+            return line.replace(/^[*-]+\s*/, '- [ ] ').trim();
+          }
+          // If no marker, add checkbox format
+          return `- [ ] ${line.trim()}`;
+        })
+        .join('\n');
 
-        if (navigator.canShare && navigator.canShare(shareOptions)) {
-          navigator.share(shareOptions)
-            .then(() => {
-              console.log('Shared successfully');
-              dropdown.classList.remove('active');
-            })
-            .catch((error) => {
-              if (error.name !== 'AbortError') {
-                console.error('Error sharing:', error);
-              }
-            });
-        } else {
-          alert('Web Share API is not supported in your browser');
-        }
-      });
+      // Clean and format summary
+      const cleanSummary = meetingSummary
+        .split('\n')
+        .filter(line => line.trim() && !line.startsWith('#')) // Remove empty lines and headers
+        .map(line => {
+          // If line starts with * or -, keep the marker but clean up extra spaces
+          if (line.match(/^[*-]/)) {
+            return line.replace(/^([*-]+)\s*/, '$1 ').trim();
+          }
+          return line.trim();
+        })
+        .join('\n');
+
+      const markdownText = `## Action Items\n${cleanActionItems}\n\n## Meeting Summary\n${cleanSummary}`;
+
+      const shareOptions = {
+        text: markdownText,
+        title: 'Meeting Notes'
+      };
+
+      if (navigator.canShare && navigator.canShare(shareOptions)) {
+        navigator.share(shareOptions)
+          .then(() => {
+            console.log('Shared successfully');
+            copyDropdown.classList.remove('active');
+          })
+          .catch((error) => {
+            if (error.name !== 'AbortError') {
+              console.error('Error sharing:', error);
+            }
+          });
+      } else {
+        alert('Web Share API is not supported in your browser');
+      }
     }
   );
 });
