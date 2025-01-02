@@ -468,12 +468,21 @@ function meetingRoutines(uiType) {
 
         // CRITICAL DOM DEPENDENCY. Grab the transcript element. This element is present, irrespective of captions ON/OFF, so this executes independent of operation mode.
         const transcriptTargetNode = document.querySelector(".a4cQT");
+        // attempt one to dim down the transcript
+        if (transcriptTargetNode) {
+          transcriptTargetNode.style.position = "absolute";
+        }
+
         // Attempt to dim down the transcript
         try {
+          // console.log("This is the transcriptTargetNode", transcriptTargetNode);
           transcriptTargetNode.firstChild.style.opacity = 0.2;
         } catch (error) {
           console.error(error);
         }
+
+        // transcriptTargetNode.style.position = "absolute";
+        // console.log(transcriptTargetNode);
 
         // Create transcript observer instance linked to the callback function. Registered irrespective of operation mode, so that any visible transcript can be picked up during the meeting, independent of the operation mode.
         const transcriptObserver = new MutationObserver(transcriber);
@@ -572,7 +581,6 @@ function meetingRoutines(uiType) {
           // can you send a notification to user saying that we are processing the transcript?
           overWriteChromeStorage(["transcript", "chatMessages"], true);
           
-          // showSidebar();
           // we will need to make an API call here to save the transcript to the cloud
         });
       } catch (error) {
