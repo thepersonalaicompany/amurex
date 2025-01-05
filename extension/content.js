@@ -109,6 +109,27 @@ function setupWebSocket() {
 
       const userId = response.userId;
       console.log("User ID:", userId);
+      console.log("Meeting ID:", meetingId);
+
+      const setMeetingId = async (mId) => {
+          return new Promise((resolve, reject) => {
+              chrome.storage.local.set({ mId }, () => {
+                  if (chrome.runtime.lastError) {
+                      return reject(chrome.runtime.lastError);
+                  }
+                  resolve(`Meeting ID set to: ${mId}`);
+              });
+          });
+      };
+
+      (async () => {
+          try {
+              const result = await setMeetingId(meetingId); // Replace '12345' with your desired meeting ID
+              console.log(result);
+          } catch (error) {
+              console.error('Error setting Meeting ID:', error);
+          }
+      })();
 
       const wsUrl = `wss://${BASE_URL_BACKEND.replace(
         "https://",
