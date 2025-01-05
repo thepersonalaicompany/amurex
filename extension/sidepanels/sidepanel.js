@@ -6,6 +6,18 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+function deleteKeysFromStorage() {
+  const keysToDelete = ['mId'];
+
+  chrome.storage.local.remove(keysToDelete, function() {
+      if (chrome.runtime.lastError) {
+          console.error("Error deleting keys:", chrome.runtime.lastError);
+      } else {
+          console.log(`Keys deleted: ${keysToDelete.join(', ')}`);
+      }
+  });
+}
+
 async function fetchAINotes() {
   const summaryDiv = document.getElementById("meeting-summary");
   const actionItemsDiv = document.getElementById("action-items");
@@ -40,13 +52,40 @@ async function fetchAINotes() {
       )
       .join("");
 
+    // Get userId first
+    const userIdResponse = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        { action: "getUserId" },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            reject(chrome.runtime.lastError);
+          } else {
+            resolve(response);
+          }
+        }
+      );
+    });
+
+    const getMeetingId = async () => {
+        const result = await chrome.storage.local.get('mId');
+        return result.mId; // Extract the meetingId value
+    };
+    
+    const userId = userIdResponse.userId;
+    const meetingId = await getMeetingId();
+
+    console.log(`Meeting ID retrieved: ${meetingId}`);
+    console.log(`User ID retrieved: ${userId}`);
+    
     const body = {
       transcript: formattedTranscript,
+      meeting_id: meetingId,
+      user_id: userId,
     };
 
     // Make API request
     const response = await fetch(
-      `${AMUREX_CONFIG.BASE_URL_BACKEND}/generate_actions`,
+      `${AMUREX_CONFIG.BASE_URL_BACKEND}/end_meeting`,
       {
         method: "POST",
         headers: {
@@ -98,6 +137,7 @@ async function fetchAINotes() {
 
     // Add this after the actionItemsDiv.innerHTML line:
     generateEmailOptions(data);
+    deleteKeysFromStorage();
   } catch (error) {
     console.error("Error generating notes:", error);
     summaryDiv.innerHTML =

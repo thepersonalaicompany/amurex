@@ -24,6 +24,18 @@ chrome.runtime.onInstalled.addListener(function (details) {
   }
 });
 
+// function deleteKeysFromStorage() {
+//   const keysToDelete = ['mId'];
+
+//   chrome.storage.local.remove(keysToDelete, function() {
+//       if (chrome.runtime.lastError) {
+//           console.error("Error deleting keys:", chrome.runtime.lastError);
+//       } else {
+//           console.log(`Keys deleted: ${keysToDelete.join(', ')}`);
+//       }
+//   });
+// }
+
 async function getUserId() {
   session = await chrome.cookies.get({
     url: AMUREX_CONFIG.BASE_URL_WEB,
@@ -80,6 +92,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     chrome.storage.local.set({ hasMeetingEnded: true }, function () {
       console.log("Meeting ended flag set");
     });
+    // deleteKeysFromStorage();
   } 
     else if (
     message.type === "open_side_panel" ||
@@ -155,7 +168,6 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 // Download transcript if meeting tab is closed
 chrome.tabs.onRemoved.addListener(async function (tabid) {
   const data = await chrome.storage.local.get(["meetingTabId", "hasMeetingEnded"]);
-  console.log("Data:", data);
   
   if (tabid == data.meetingTabId) {
     console.log("Successfully intercepted tab close");
@@ -193,9 +205,11 @@ chrome.tabs.onRemoved.addListener(async function (tabid) {
     // Clear meetingTabId and hasMeetingEnded flags
     await chrome.storage.local.set({ 
       meetingTabId: null,
-      hasMeetingEnded: false 
+      hasMeetingEnded: false, 
     });
     console.log("Meeting tab id cleared for next meeting");
+
+    // deleteKeysFromStorage();
   }
 });
 
