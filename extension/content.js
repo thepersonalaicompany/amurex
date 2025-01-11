@@ -112,23 +112,23 @@ function setupWebSocket() {
       console.log("Meeting ID:", meetingId);
 
       const setMeetingId = async (mId) => {
-          return new Promise((resolve, reject) => {
-              chrome.storage.local.set({ mId }, () => {
-                  if (chrome.runtime.lastError) {
-                      return reject(chrome.runtime.lastError);
-                  }
-                  resolve(`Meeting ID set to: ${mId}`);
-              });
+        return new Promise((resolve, reject) => {
+          chrome.storage.local.set({ mId }, () => {
+            if (chrome.runtime.lastError) {
+              return reject(chrome.runtime.lastError);
+            }
+            resolve(`Meeting ID set to: ${mId}`);
           });
+        });
       };
 
       (async () => {
-          try {
-              const result = await setMeetingId(meetingId); // Replace '12345' with your desired meeting ID
-              console.log(result);
-          } catch (error) {
-              console.error('Error setting Meeting ID:', error);
-          }
+        try {
+          const result = await setMeetingId(meetingId); // Replace '12345' with your desired meeting ID
+          console.log(result);
+        } catch (error) {
+          console.error("Error setting Meeting ID:", error);
+        }
       })();
 
       const wsUrl = `wss://${BASE_URL_BACKEND.replace(
@@ -251,9 +251,9 @@ const debouncedDoStuff = async function () {
     }
 
     // Send suggestion check via WebSocket
-    chrome.storage.local.get(["isFileUploaded"], function(result) {
+    chrome.storage.local.get(["isFileUploaded"], function (result) {
       const isFileUploaded = result.isFileUploaded;
-      
+
       // Now you can use isFileUploaded in your WebSocket message
       ws.send(
         JSON.stringify({
@@ -261,7 +261,7 @@ const debouncedDoStuff = async function () {
           data: {
             transcript: formattedPayload,
             user_id: userId,
-            isFileUploaded: isFileUploaded
+            isFileUploaded: isFileUploaded,
           },
         })
       );
@@ -272,7 +272,26 @@ const debouncedDoStuff = async function () {
       if (!event.data) {
         return;
       }
-      const data = JSON.parse(event.data);
+      let data;
+      try {
+        data = JSON.parse(event.data);
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error);
+        chrome.storage.local.get(["meetingQA"], function (result) {
+          let qaHistory = result.meetingQA || [];
+          qaHistory.push({
+            timestamp: new Date().toISOString(),
+            question: "Error processing response",
+            answer: "Failed to generate meeting notes. Please try again later.",
+            meetingId: document.location.pathname.split("/")[1].split("?")[0],
+            type: "error_notification",
+          });
+          chrome.storage.local.set({ meetingQA: qaHistory }, function () {
+            console.log("Error notification stored in meetingQA");
+          });
+        });
+        return;
+      }
       // Check for exceeded_response type
       if (data.type === "exceeded_response") {
         console.log("Response limit exceeded, stopping transcript processing");
@@ -580,9 +599,12 @@ function meetingRoutines(uiType) {
 
           // Clear meetingQA from storage
           console.log("Setting hasMeetingEnded to true");
-          chrome.storage.local.set({ meetingQA: [], hasMeetingEnded: true }, function () {
-            console.log("Meeting QA cleared due to meeting end");
-          });
+          chrome.storage.local.set(
+            { meetingQA: [], hasMeetingEnded: true },
+            function () {
+              console.log("Meeting QA cleared due to meeting end");
+            }
+          );
 
           transcriptObserver.disconnect();
           chatMessagesObserver.disconnect();
@@ -601,7 +623,7 @@ function meetingRoutines(uiType) {
 
           // can you send a notification to user saying that we are processing the transcript?
           overWriteChromeStorage(["transcript", "chatMessages"], true);
-          
+
           // we will need to make an API call here to save the transcript to the cloud
         });
       } catch (error) {
