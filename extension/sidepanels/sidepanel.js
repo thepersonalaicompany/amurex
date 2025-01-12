@@ -84,60 +84,58 @@ async function fetchAINotes() {
     };
 
     // Make API request
-    const response = await fetch(
-      `${AMUREX_CONFIG.BASE_URL_BACKEND}/end_meeting`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(body),
-      }
-    );
+    fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/end_meeting`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+    .then(response => response.json())
+    .then(data => {
+      // Display the Notion link and meeting notes
+      summaryDiv.innerHTML = `
+        <div class="notes-content">${
+          data.notes_content
+            ? data.notes_content
+                .trim()
+                .split("\n")
+                .filter((line) => line.trim() !== "")
+                .map((line) =>
+                  line.startsWith("- ")
+                    ? `<li>${line.substring(2)}</li>` // Handle list items
+                    : line // Keep other lines as is
+                        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                        .replace(/\*(.*?)\*/g, "<em>$1</em>")
+                        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
+                )
+                .join("\n") // Restore newlines
+                .replace(
+                  /(<li>.*?<\/li>)\n?(<li>.*?<\/li>)+/g,
+                  (list) => `<ul>${list}</ul>`
+                ) // Wrap consecutive list items
+                .replace(/\n/g, "<br>") // Convert remaining newlines to <br>
+            : "No meeting notes available."
+        }</div>
+      `;
 
-    if (!response.ok) {
-      throw new Error(`Server responded with ${response.status}`);
-    }
+      // Display the action items with markdown formatting
+      actionItemsDiv.innerHTML = `
+        <div class="action-items">${
+          data.action_items || "No action items available."
+        }</div>
+      `;
 
-    const data = await response.json();
-
-    // Display the Notion link and meeting notes
-    summaryDiv.innerHTML = `
-      <div class="notes-content">${
-        data.notes_content
-          ? data.notes_content
-              .trim()
-              .split("\n")
-              .filter((line) => line.trim() !== "")
-              .map((line) =>
-                line.startsWith("- ")
-                  ? `<li>${line.substring(2)}</li>` // Handle list items
-                  : line // Keep other lines as is
-                      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                      .replace(/\*(.*?)\*/g, "<em>$1</em>")
-                      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
-              )
-              .join("\n") // Restore newlines
-              .replace(
-                /(<li>.*?<\/li>)\n?(<li>.*?<\/li>)+/g,
-                (list) => `<ul>${list}</ul>`
-              ) // Wrap consecutive list items
-              .replace(/\n/g, "<br>") // Convert remaining newlines to <br>
-          : "No meeting notes available."
-      }</div>
-    `;
-
-    // Display the action items with markdown formatting
-    actionItemsDiv.innerHTML = `
-      <div class="action-items">${
-        data.action_items || "No action items available."
-      }</div>
-    `;
-
-    // Add this after the actionItemsDiv.innerHTML line:
-    generateEmailOptions(data);
-    deleteKeysFromStorage();
+      // Add this after the actionItemsDiv.innerHTML line:
+      generateEmailOptions(data);
+      deleteKeysFromStorage();
+    })
+    .catch(error => {
+      console.error("Error fetching or parsing meeting notes:", error);
+      summaryDiv.innerHTML = "<p>Failed to generate meeting notes. Please try again later.</p>";
+      actionItemsDiv.innerHTML = "<p class='error-details'>Error: Failed to process server response</p>";
+    });
   } catch (error) {
     console.error("Error generating notes:", error);
     summaryDiv.innerHTML =
