@@ -474,7 +474,7 @@ document.querySelectorAll('.copy-btn').forEach(button => {
           }
     
           const userId = response.userId;
-          const meetingId = chrome.storage.local.get('mId') || 'unknown';
+          const meetingId = 'unknown';
 
           if (AMUREX_CONFIG.ANALYTICS_ENABLED) {
             fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/track`, {
