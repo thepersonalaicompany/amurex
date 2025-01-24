@@ -361,19 +361,65 @@ document.getElementById("download-transcript").addEventListener("click", () => {
   );
 });
 
-document.getElementById("copy-to-clipboard").addEventListener("click", () => {
-  const copyText = document.getElementById("copy-to-clipboard-text");
-  const originalText = copyText ? copyText.textContent : '';
+document.getElementById('copy-to-clipboard').addEventListener('click', () => {
+  const button = document.getElementById('copy-to-clipboard');
+  const buttonText = button.querySelector('span');
+  const buttonIcon = button.querySelector('svg');
+  const originalText = buttonText.textContent;
   
-  if (copyText) {
-    copyText.textContent = "Copied!";
-    
-    // Reset text after 2 seconds
-    setTimeout(() => {
-      copyText.textContent = originalText;
-    }, 2000);
-  }
+  // Get and format content for copying
+  const actionItems = document.getElementById('action-items').innerText;
+  const meetingSummary = document.getElementById('meeting-summary').innerText;
 
+  // Clean and format action items
+  const cleanActionItems = actionItems
+    .split('\n')
+    .filter(item => item.trim() && !item.startsWith('#'))
+    .map(line => {
+      if (line.match(/^[*-]/)) {
+        return line.replace(/^[*-]+\s*/, '- [ ] ').trim();
+      }
+      return `- [ ] ${line.trim()}`;
+    })
+    .join('\n');
+
+  // Clean and format summary
+  const cleanSummary = meetingSummary
+    .split('\n')
+    .filter(line => line.trim() && !line.startsWith('#'))
+    .map(line => {
+      if (line.match(/^[*-]/)) {
+        return line.replace(/^([*-]+)\s*/, '$1 ').trim();
+      }
+      return line.trim();
+    })
+    .join('\n');
+
+  const markdownText = `## Action Items\n${cleanActionItems}\n\n## Meeting Summary\n${cleanSummary}`;
+  
+  navigator.clipboard.writeText(markdownText).then(() => {
+    // Change button appearance
+    button.style.background = 'rgba(147, 51, 234, 0.1)';
+    button.style.color = '#9333EA';
+    buttonText.textContent = 'Copied!';
+    
+    // Change icon to checkmark
+    buttonIcon.innerHTML = `
+      <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    `;
+    
+    // Reset after 2 seconds
+    setTimeout(() => {
+      button.style.background = '';
+      button.style.color = '';
+      buttonText.textContent = originalText;
+      buttonIcon.innerHTML = `
+        <path d="M8 4V16C8 17.1046 8.89543 18 10 18H18C19.1046 18 20 17.1046 20 16V7.24853C20 6.77534 19.7893 6.32459 19.4142 6.00001L16.9983 3.75735C16.6232 3.43277 16.1725 3.22205 15.6993 3.22205H10C8.89543 3.22205 8 4.11748 8 5.22205" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      `;
+    }, 2000);
+  });
+
+  // Track the copy action if analytics is enabled
   const meetingId = window.location.href.includes('meetingId=') ? 
     window.location.href.split('meetingId=')[1].split('&')[0] : 
     'unknown';
@@ -390,7 +436,6 @@ document.getElementById("copy-to-clipboard").addEventListener("click", () => {
 
       const userId = response.userId;
 
-      // Make tracking request only if analytics is enabled
       if (AMUREX_CONFIG.ANALYTICS_ENABLED) {
         fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/track`, {
           method: "POST",
@@ -407,50 +452,6 @@ document.getElementById("copy-to-clipboard").addEventListener("click", () => {
           console.error("Error tracking copy to clipboard:", error);
         });
       }
-
-      // Get and clean the content
-      const actionItems = document.getElementById('action-items').innerText;
-      const meetingSummary = document.getElementById('meeting-summary').innerText;
-
-      // Clean and format action items
-      const cleanActionItems = actionItems
-        .split('\n')
-        .filter(item => item.trim() && !item.startsWith('#')) // Remove empty lines and headers
-        .map(line => {
-          // If line starts with * or -, convert to checkbox format
-          if (line.match(/^[*-]/)) {
-            return line.replace(/^[*-]+\s*/, '- [ ] ').trim();
-          }
-          // If no marker, add checkbox format
-          return `- [ ] ${line.trim()}`;
-        })
-        .join('\n');
-
-      // Clean and format summary
-      const cleanSummary = meetingSummary
-        .split('\n')
-        .filter(line => line.trim() && !line.startsWith('#')) // Remove empty lines and headers
-        .map(line => {
-          // If line starts with * or -, keep the marker but clean up extra spaces
-          if (line.match(/^[*-]/)) {
-            return line.replace(/^([*-]+)\s*/, '$1 ').trim();
-          }
-          return line.trim();
-        })
-        .join('\n');
-
-      const markdownText = `## Action Items\n${cleanActionItems}\n\n## Meeting Summary\n${cleanSummary}`;
-      
-      navigator.clipboard.writeText(markdownText).then(() => {
-        // Visual feedback
-        const button = document.getElementById('copy-to-clipboard');
-        button.style.background = 'rgba(147, 51, 234, 0.1)';
-        button.style.color = '#9333EA';
-        setTimeout(() => {
-          button.style.background = '';
-          button.style.color = '';
-        }, 1000);
-      });
     }
   );
 });
@@ -461,6 +462,39 @@ document.querySelectorAll('.copy-btn').forEach(button => {
     const section = this.closest('.section');
     const contentDiv = section.querySelector('.card');
     const text = contentDiv.innerText;
+      // Make tracking request only if analytics is enabled
+      chrome.runtime.sendMessage(
+        {
+          action: "getUserId",
+        },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.error("Error getting user id:", chrome.runtime.lastError);
+            return;
+          }
+    
+          const userId = response.userId;
+          const meetingId = chrome.storage.local.get('mId') || 'unknown';
+
+          if (AMUREX_CONFIG.ANALYTICS_ENABLED) {
+            fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/track`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              body: JSON.stringify({ 
+                uuid: userId, 
+                meeting_id: meetingId, 
+                event_type: "copy_to_clipboard_small_button" 
+              }),
+            }).catch(error => {
+              console.error("Error tracking share:", error);
+            });
+          }
+        }
+      );
+
     navigator.clipboard.writeText(text).then(() => {
       // Visual feedback
       button.style.color = '#9333EA';
