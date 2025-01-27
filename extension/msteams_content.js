@@ -1,6 +1,7 @@
 // Ensure these variables are defined globally
 let captionsActivated = false;
 let observerInitialized = false;
+let transcriptMessages = [];
 
 // Function to check if a Teams meeting has started
 function checkTeamsMeetingStart() {
@@ -26,6 +27,12 @@ function checkTeamsMeetingStart() {
         }, 1000);
     } else if (!meetingStartIndicator) {
         console.log("No meeting detected.");
+        // Save the transcript to local storage when the meeting ends
+        if (transcriptMessages.length > 0) {
+            localStorage.setItem('transcript', JSON.stringify(transcriptMessages));
+            console.log("Transcript saved to local storage.");
+            transcriptMessages = []; // Clear the messages after saving
+        }
     }
 }
 
@@ -55,9 +62,9 @@ function activateCaptionsInTeams() {
                             console.log("Captions activated in Microsoft Teams.");
                             resolve(); // Resolve the promise when captions are activated
                         }
-                    }, 500); // Check every 500 milliseconds
+                    }, 1000); // Check every 500 milliseconds
                 }
-            }, 500); // Check every 500 milliseconds
+            }, 1000); // Check every 500 milliseconds
         } else {
             console.log("Unable to find the necessary elements to activate captions.");
             resolve(); // Resolve the promise if elements are not found
@@ -75,7 +82,7 @@ function waitForTranscriptWrapper() {
                 clearInterval(checkWrapper);
                 resolve(); // Resolve the promise when the wrapper is found
             }
-        }, 500); // Check every 500 milliseconds
+        }, 1000); // Check every 500 milliseconds
     });
 }
 
@@ -96,28 +103,20 @@ function setupObserver() {
                 mutationsList.forEach(mutation => {
                     if (mutation.type === 'childList') {
                         mutation.addedNodes.forEach(node => {
-                            console.log("This is the node:", node);
-
                             if (node.nodeType === 1 && node.matches('div')) {
-                                const ulElement = node.querySelector('ul[data-tid="closed-caption-chat-message"]');
-                                if (ulElement) {
-                                    const liElement = ulElement.querySelector('li.ui-chat__item');
-                                    if (liElement) {
-                                        const messageDiv = liElement.querySelector('.ui-chat__item__message');
-                                        if (messageDiv) {
-                                            // Wait for 0.5 seconds before processing the messageDiv
-                                            setTimeout(() => {
-                                                const nameElement = messageDiv.querySelector('.ui-chat__message__author');
-                                                const messageElement = messageDiv.querySelector('[data-tid="closed-caption-text"]');
-                                                
-                                                const speakerName = nameElement ? nameElement.textContent.trim() : "Unknown";
-                                                const messageText = messageElement ? messageElement.textContent.trim() : "";
+                                const messageDivs = node.querySelectorAll('.ui-chat__item__message');
+                                messageDivs.forEach(messageDiv => {
+                                    const nameElement = messageDiv.querySelector('.ui-chat__message__author');
+                                    const messageElement = messageDiv.querySelector('[data-tid="closed-caption-text"]');
+                                    
+                                    const speakerName = nameElement ? nameElement.textContent.trim() : "Unknown";
+                                    const messageText = messageElement ? messageElement.textContent.trim() : "";
 
-                                                console.log(`Speaker: ${speakerName}, Message: ${messageText}`);
-                                            }, 500);
-                                        }
-                                    }
-                                }
+                                    console.log(`Speaker: ${speakerName}, Message: ${messageText}`);
+
+                                    // Add the message to the transcript array
+                                    transcriptMessages.push({ speaker: speakerName, message: messageText });
+                                });
                             } else {
                                 console.log("Node does not match expected chat message structure.");
                             }
@@ -132,7 +131,7 @@ function setupObserver() {
             console.log("MutationObserver initialized for Microsoft Teams transcript.");
         } else {
             console.log("No virtual list content found. Retrying in 500ms...");
-            setTimeout(setupObserver, 500); // Retry after 500 milliseconds
+            setTimeout(setupObserver, 1000); // Retry after 500 milliseconds
         }
     } else {
         console.log("Transcript wrapper not found. Waiting for content...");
