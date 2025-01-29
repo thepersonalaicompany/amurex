@@ -37,7 +37,7 @@ body {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
 }
 
 .settings-btn {
@@ -790,6 +790,30 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.black-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: #18181B;
+  border: 1px solid #27272A;
+  border-radius: 8px;
+  color: #FAFAFA;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.black-btn:hover {
+  background: #27272A;
+}
+
+.black-btn svg {
+  width: 20px;
+  height: 20px;
 }
 
 
