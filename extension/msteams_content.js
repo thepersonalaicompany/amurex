@@ -86,6 +86,60 @@ function waitForTranscriptWrapper() {
     });
 }
 
+// function setupObserver() {
+//     const transcriptWrapper = document.querySelector('[data-tid="closed-caption-v2-window-wrapper"]');
+    
+//     if (transcriptWrapper) {
+//         console.log("Found the transcript wrapper");
+
+//         const virtualListContent = transcriptWrapper.querySelector('[data-tid="closed-caption-v2-virtual-list-content"]');
+
+//         if (virtualListContent) {
+//             console.log("Found the virtual list content");
+
+//             const config = { childList: true, subtree: true };
+
+//             const callback = (mutationsList, observer) => {
+//                 mutationsList.forEach(mutation => {
+//                     if (mutation.type === 'childList') {
+//                         mutation.addedNodes.forEach(node => {
+//                             if (node.nodeType === 1 && node.matches('div')) {
+//                                 const messageDivs = node.querySelectorAll('.ui-chat__item__message');
+//                                 messageDivs.forEach(messageDiv => {
+//                                     const nameElement = messageDiv.querySelector('.ui-chat__message__author');
+//                                     const messageElement = messageDiv.querySelector('[data-tid="closed-caption-text"]');
+                                    
+//                                     const speakerName = nameElement ? nameElement.textContent.trim() : "Unknown";
+//                                     const messageText = messageElement ? messageElement.textContent.trim() : "";
+
+//                                     console.log(`Speaker: ${speakerName}, Message: ${messageText}`);
+
+//                                     // Add the message to the transcript array
+//                                     transcriptMessages.push({ speaker: speakerName, message: messageText });
+//                                 });
+//                             } else {
+//                                 console.log("Node does not match expected chat message structure.");
+//                             }
+//                         });
+//                     }
+//                 });
+//             };
+
+//             const observer = new MutationObserver(callback);
+//             observer.observe(virtualListContent, config);
+
+//             console.log("MutationObserver initialized for Microsoft Teams transcript.");
+//         } else {
+//             console.log("No virtual list content found. Retrying in 500ms...");
+//             setTimeout(setupObserver, 1000); // Retry after 500 milliseconds
+//         }
+//     } else {
+//         console.log("Transcript wrapper not found. Waiting for content...");
+//         // Optionally, you can set a timeout or retry mechanism here
+//     }
+// }
+
+
 function setupObserver() {
     const transcriptWrapper = document.querySelector('[data-tid="closed-caption-v2-window-wrapper"]');
     
@@ -110,12 +164,22 @@ function setupObserver() {
                                     const messageElement = messageDiv.querySelector('[data-tid="closed-caption-text"]');
                                     
                                     const speakerName = nameElement ? nameElement.textContent.trim() : "Unknown";
-                                    const messageText = messageElement ? messageElement.textContent.trim() : "";
+                                    let lastRecordedMessage = ""; // Temporary variable to store the last message
 
-                                    console.log(`Speaker: ${speakerName}, Message: ${messageText}`);
+                                    // Set up an observer for the message text element
+                                    const messageObserver = new MutationObserver(() => {
+                                        const updatedMessageText = messageElement.textContent.trim();
+                                        console.log(`updatedMessageText: ${updatedMessageText}`);
+                                        console.log(`lastRecordedMessage: ${lastRecordedMessage}`);
+                                        if (updatedMessageText !== lastRecordedMessage) {
+                                            console.log(`Updated Message: ${updatedMessageText}`);
+                                            // Append each change to the transcript array
+                                            transcriptMessages.push({ speaker: speakerName, message: updatedMessageText });
+                                            lastRecordedMessage = updatedMessageText; // Update the temporary variable
+                                        }
+                                    });
 
-                                    // Add the message to the transcript array
-                                    transcriptMessages.push({ speaker: speakerName, message: messageText });
+                                    messageObserver.observe(messageElement, { childList: true, characterData: true, subtree: true });
                                 });
                             } else {
                                 console.log("Node does not match expected chat message structure.");
