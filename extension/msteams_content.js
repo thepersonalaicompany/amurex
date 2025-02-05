@@ -35,6 +35,7 @@ function checkTeamsMeetingStart() {
         if (transcriptMessages.length > 0) {
             localStorage.setItem('transcript', JSON.stringify(transcriptMessages));
             console.log("Transcript saved to local storage.");
+            chrome.runtime.sendMessage({ type: "open_side_panel" });
             transcriptMessages = []; // Clear the messages after saving
         }
 =======
@@ -43,20 +44,22 @@ function checkTeamsMeetingStart() {
 }
 
 // Function to activate captions in Teams
-function activateCaptionsInTeams() {
-    return new Promise((resolve) => {
-        const showMoreButton = document.getElementById("callingButtons-showMoreBtn");
+async function activateCaptionsInTeams() {
+    const showMoreButton = document.getElementById("callingButtons-showMoreBtn");
 
-        if (showMoreButton) {
-            console.log("found the button");
-            showMoreButton.click();
+    if (showMoreButton) {
+        console.log("found the button");
+        showMoreButton.click();
 
+        // Wait for the language speech menu control to appear
+        await new Promise((resolve) => {
             const waitForElement = setInterval(() => {
                 const languageSpeechMenuControl = document.getElementById("LanguageSpeechMenuControl-id");
 
                 if (languageSpeechMenuControl) {
                     clearInterval(waitForElement);
                     languageSpeechMenuControl.click();
+<<<<<<< HEAD
 
                     const waitForCaptionsButton = setInterval(() => {
                         const captionsButton = document.getElementById("closed-captions-button");
@@ -82,6 +85,30 @@ function activateCaptionsInTeams() {
             resolve(); // Resolve the promise if elements are not found
         }
     });
+=======
+                    resolve();
+                }
+            }, 2000); // Check every 1000 milliseconds
+        });
+
+        // Wait for the captions button to appear
+        await new Promise((resolve) => {
+            const waitForCaptionsButton = setInterval(() => {
+                const captionsButton = document.getElementById("closed-captions-button");
+
+                if (captionsButton) {
+                    clearInterval(waitForCaptionsButton);
+                    captionsButton.click();
+                    console.log("Captions activated in Microsoft Teams.");
+                    resolve();
+                }
+            }, 500); // Check every 500 milliseconds
+        });
+
+    } else {
+        console.log("Unable to find the necessary elements to activate captions.");
+    }
+>>>>>>> 257a5c2 (save changes to msteams_content.js)
 }
 
 // Function to wait for the transcript wrapper to load
@@ -99,6 +126,7 @@ function waitForTranscriptWrapper() {
     });
 }
 
+<<<<<<< HEAD
 // function setupObserver() {
 //     const transcriptWrapper = document.querySelector('[data-tid="closed-caption-v2-window-wrapper"]');
     
@@ -159,6 +187,8 @@ function waitForTranscriptWrapper() {
 }
 
 >>>>>>> fca549e (Add MS Teams support)
+=======
+>>>>>>> 257a5c2 (save changes to msteams_content.js)
 function setupObserver() {
     const transcriptWrapper = document.querySelector('[data-tid="closed-caption-v2-window-wrapper"]');
     
@@ -188,9 +218,7 @@ function setupObserver() {
 
                                     // Set up an observer for the message text element
                                     const messageObserver = new MutationObserver(() => {
-                                        const updatedMessageText = messageElement.textContent.trim();
-                                        console.log(`updatedMessageText: ${updatedMessageText}`);
-                                        console.log(`lastRecordedMessage: ${lastRecordedMessage}`);
+                                        const updatedMessageText = messageElement.textContent;
                                         if (updatedMessageText !== lastRecordedMessage) {
                                             console.log(`Updated Message: ${updatedMessageText}`);
                                             // Append each change to the transcript array
@@ -237,6 +265,9 @@ function setupObserver() {
             observer.observe(virtualListContent, config);
 
             console.log("MutationObserver initialized for Microsoft Teams transcript.");
+
+            // Call removeDuplicateMessages after a delay to ensure all messages are collected
+            setTimeout(groupMessagesBySpeaker, 2000);
         } else {
             console.log("No virtual list content found. Retrying in 500ms...");
 <<<<<<< HEAD
@@ -249,6 +280,35 @@ function setupObserver() {
         console.log("Transcript wrapper not found. Waiting for content...");
         // Optionally, you can set a timeout or retry mechanism here
     }
+}
+
+function groupMessagesBySpeaker() {
+    const groupedMessages = [];
+    let currentSpeaker = null;
+    let currentMessage = "";
+
+    transcriptMessages.forEach((messageObj) => {
+        if (messageObj.speaker !== currentSpeaker) {
+            if (currentSpeaker !== null) {
+                // Push the accumulated message for the previous speaker
+                groupedMessages.push({ speaker: currentSpeaker, message: currentMessage.trim() });
+            }
+            // Start a new message for the new speaker
+            currentSpeaker = messageObj.speaker;
+            currentMessage = messageObj.message;
+        } else {
+            // Continue accumulating messages for the current speaker
+            currentMessage += " " + messageObj.message;
+        }
+    });
+
+    // Push the last accumulated message
+    if (currentSpeaker !== null) {
+        groupedMessages.push({ speaker: currentSpeaker, message: currentMessage.trim() });
+    }
+
+    transcriptMessages = groupedMessages;
+    console.log("Messages grouped by speaker.");
 }
 
 
