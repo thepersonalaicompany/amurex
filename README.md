@@ -93,7 +93,7 @@ Take control of your meetings with Amurex, and let it handle the busywork while 
    ```javascript
    const AMUREX_CONFIG = {
      BASE_URL_BACKEND: "http://localhost:8080",  // Your backend server URL
-     BASE_URL_WEB: "http://localhost:8080",      // Your web server URL
+     BASE_URL_WEB: "http://localhost:3000",      // Your web server URL
      ANALYTICS_ENABLED: true                     // Set to false to disable tracking
    };
    window.AMUREX_CONFIG = AMUREX_CONFIG;
@@ -102,13 +102,15 @@ Take control of your meetings with Amurex, and let it handle the busywork while 
    ```javascript
    const AMUREX_CONFIG = {
      BASE_URL_BACKEND: "http://localhost:8080",  // Your backend server URL
-     BASE_URL_WEB: "http://localhost:8080",      // Your web server URL
+     BASE_URL_WEB: "http://localhost:3000",      // Your web server URL
      ANALYTICS_ENABLED: true                     // Set to false to disable tracking
    };
    ```
 3. Navigate to the [`backend`](https://github.com/thepersonalaicompany/amurex-backend) repository
 4. Follow the backend setup instructions in its `README.md`
-5. Load the unpacked extension in Chrome
+5. Navigate to the [`web`](https://github.com/thepersonalaicompany/amurex-web) repository
+6. Follow the web setup instructions in its `README.md`
+7. Load the unpacked extension in Chrome
 
 ## Using the development version
 
