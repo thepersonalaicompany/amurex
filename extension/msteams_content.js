@@ -2,6 +2,7 @@
 let captionsActivated = false;
 let observerInitialized = false;
 let transcriptMessages = [];
+let transcript = [];
 
 // Function to check if a Teams meeting has started
 function checkTeamsMeetingStart() {
@@ -30,7 +31,21 @@ function checkTeamsMeetingStart() {
         // Save the transcript to local storage when the meeting ends
         if (transcriptMessages.length > 0) {
             localStorage.setItem('transcript', JSON.stringify(transcriptMessages));
-            console.log("Transcript saved to local storage.");
+            console.log("Transcript saved as local variable.");
+
+            // Retrieve and process the transcript
+            transcript = JSON.parse(localStorage.getItem('transcript'));
+
+            // Convert the transcript object into a formatted string
+            let transcriptString = transcript.map(entry => {
+                return `Speaker: ${entry.speaker}\nText: ${entry.message}\n---`;
+            }).join('\n\n');
+
+            console.log("Formatted Transcript:\n" + transcriptString);
+        
+            storeTranscript();
+            chrome.runtime.sendMessage({ type: "meeting_ended" });
+            chrome.runtime.sendMessage({ type: "open_side_panel" });
             transcriptMessages = []; // Clear the messages after saving
         }
     }
@@ -86,58 +101,19 @@ function waitForTranscriptWrapper() {
     });
 }
 
-// function setupObserver() {
-//     const transcriptWrapper = document.querySelector('[data-tid="closed-caption-v2-window-wrapper"]');
-    
-//     if (transcriptWrapper) {
-//         console.log("Found the transcript wrapper");
 
-//         const virtualListContent = transcriptWrapper.querySelector('[data-tid="closed-caption-v2-virtual-list-content"]');
+function storeTranscript() {
+    // Prepare the object to save
+    const objectToSave = {
+        transcript: transcript, // Assuming 'transcript' is your transcript array
+        // Add any other data you want to store
+    };
 
-//         if (virtualListContent) {
-//             console.log("Found the virtual list content");
-
-//             const config = { childList: true, subtree: true };
-
-//             const callback = (mutationsList, observer) => {
-//                 mutationsList.forEach(mutation => {
-//                     if (mutation.type === 'childList') {
-//                         mutation.addedNodes.forEach(node => {
-//                             if (node.nodeType === 1 && node.matches('div')) {
-//                                 const messageDivs = node.querySelectorAll('.ui-chat__item__message');
-//                                 messageDivs.forEach(messageDiv => {
-//                                     const nameElement = messageDiv.querySelector('.ui-chat__message__author');
-//                                     const messageElement = messageDiv.querySelector('[data-tid="closed-caption-text"]');
-                                    
-//                                     const speakerName = nameElement ? nameElement.textContent.trim() : "Unknown";
-//                                     const messageText = messageElement ? messageElement.textContent.trim() : "";
-
-//                                     console.log(`Speaker: ${speakerName}, Message: ${messageText}`);
-
-//                                     // Add the message to the transcript array
-//                                     transcriptMessages.push({ speaker: speakerName, message: messageText });
-//                                 });
-//                             } else {
-//                                 console.log("Node does not match expected chat message structure.");
-//                             }
-//                         });
-//                     }
-//                 });
-//             };
-
-//             const observer = new MutationObserver(callback);
-//             observer.observe(virtualListContent, config);
-
-//             console.log("MutationObserver initialized for Microsoft Teams transcript.");
-//         } else {
-//             console.log("No virtual list content found. Retrying in 500ms...");
-//             setTimeout(setupObserver, 1000); // Retry after 500 milliseconds
-//         }
-//     } else {
-//         console.log("Transcript wrapper not found. Waiting for content...");
-//         // Optionally, you can set a timeout or retry mechanism here
-//     }
-// }
+    // Store the transcript in local storage
+    chrome.storage.local.set(objectToSave, function () {
+        console.log("Transcript saved to chrome storage");
+    });
+}
 
 
 function setupObserver() {
