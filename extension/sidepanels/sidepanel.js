@@ -1,7 +1,42 @@
 document.addEventListener("DOMContentLoaded", () => {
   checkSession(updateUI);
   setupCookieListener(updateUI);
-  document.getElementById("close-btn").addEventListener("click", () => {
+  document.getElementById("close-btn").addEventListener("click", async () => {
+    // Track closing sidebar only if analytics is enabled
+    if (AMUREX_CONFIG.ANALYTICS_ENABLED) {
+      const userIdResponse = await new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage(
+          { action: "getUserId" },
+          (response) => {
+            if (chrome.runtime.lastError) {
+              reject(chrome.runtime.lastError);
+            } else {
+              resolve(response);
+            }
+          }
+        );
+      });
+  
+      const userId = userIdResponse.userId;
+      console.log("User ID:", userId);
+      const meetingId = window.location.href.includes('meetingId=') ? 
+      window.location.href.split('meetingId=')[1].split('&')[0] : 
+      'unknown';
+
+      await fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/track`, {
+        method: "POST", 
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          uuid: userId,
+          meeting_id: meetingId,
+          event_type: "close_sidebar",
+        }),
+      });
+    }
+
     window.close();
   });
 });
