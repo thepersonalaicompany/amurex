@@ -40,7 +40,7 @@ async function fetchAINotes() {
     }
 
     // Format transcript data
-    const formattedTranscript = result.transcript
+    let formattedTranscript = result.transcript
       .map((entry) => ({
         personName: entry.personName,
         timeStamp: entry.timeStamp,
@@ -77,11 +77,25 @@ async function fetchAINotes() {
     console.log(`Meeting ID retrieved: ${meetingId}`);
     console.log(`User ID retrieved: ${userId}`);
     
+    let resultString = "";
+    let plt = await chrome.storage.local.get("platform");
+    let pltprop = plt.platform;
+
+    if (pltprop === "msteams") {
+      resultString = Object.entries(result).map(([key, value]) => {
+          return `<strong>${key}:</strong> ${JSON.stringify(value, null, 2)}`;
+      }).join('<br>');
+      formattedTranscript = resultString;
+    } else {
+      resultString = "asd";
+    }
+
     const body = {
       transcript: formattedTranscript,
       meeting_id: meetingId,
       user_id: userId,
     };
+  
 
     // Make API request
     fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/end_meeting`, {
@@ -95,7 +109,7 @@ async function fetchAINotes() {
     .then(response => response.json())
     .then(data => {
       // Display the Notion link and meeting notes
-      summaryDiv.innerHTML = `
+      summaryDiv.innerHTML = `<p>asd${formattedTranscript}</p>
         <div class="notes-content">${
           data.notes_content
             ? data.notes_content

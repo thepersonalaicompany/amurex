@@ -1,3 +1,6 @@
+const plt = {platform: "msteams"};
+chrome.storage.local.set(plt);
+
 // Ensure these variables are defined globally
 let captionsActivated = false;
 let observerInitialized = false;
