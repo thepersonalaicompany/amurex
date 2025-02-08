@@ -277,7 +277,7 @@ async function injectNotification() {
   let yesButton = document.createElement("button");
   yesButton.textContent = "Yes";
   yesButton.style.cssText = `
-    background: rgb(209, 173, 211);
+    background: #c76dcc;
     color: white;
     border: none;
     padding: 5px 15px;
@@ -293,8 +293,8 @@ async function injectNotification() {
   noButton.textContent = "No";
   noButton.style.cssText = `
     background: transparent;
-    color: rgb(209, 173, 211);
-    border: 1px solid rgb(209, 173, 211);
+    color: #c76dcc;
+    border: 1px solid #c76dcc;
     padding: 5px 15px;
     border-radius: 4px;
     cursor: pointer;

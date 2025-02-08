@@ -401,7 +401,8 @@ body {
 }
 
 .auth-btn {
-  background: #c76dcc;
+  /* background: #c76dcc; */
+  background: rgb(199, 109, 204);
   color: #ffffff;
   border: none;
   border-radius: 0.5rem;
@@ -417,17 +418,17 @@ body {
 }
 
 .auth-btn:hover {
-  background: rgb(208, 178, 209);
+  background: #c76dcc;
   transform: translateY(-1px);
 }
 
 .get-started {
-  color: #c76dcc;
+  color: rgb(199, 109, 204);
   text-decoration: none;
   font-size: 1rem;
   margin-top: 0.5rem;
   padding: 12px 24px;
-  border: 1px solid #c76dcc;
+  border: 1px solid rgb(199, 109, 204);
   border-radius: 0.5rem;
   display: inline-block;
   transition: all 0.2s ease;
