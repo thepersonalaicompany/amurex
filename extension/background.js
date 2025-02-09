@@ -101,9 +101,6 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   ) {
     const pathMap = {
       open_side_panel: "sidepanels/sidepanel.html",
-      open_late_meeting_side_panel: `sidepanels/lateMeetingSidePanel.html${
-        message.meetingId ? `?meetingId=${message.meetingId}` : ""
-      }`,
       open_file_upload_panel: `sidepanels/file_upload_panel.html${
         message.meetingId ? `?meetingId=${message.meetingId}` : ""
       }`,
@@ -130,9 +127,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 
     // Set the navigation item
     let navItem;
-    if (message.type === "open_late_meeting_side_panel") {
-      navItem = "lateMeetingSidePanel";
-    } else if (message.type === "open_file_upload_panel") {
+    if (message.type === "open_file_upload_panel") {
       navItem = "file_upload_panel";
     } else if (message.type === "open_side_panel") {
       // Make tracking request with valid userId
