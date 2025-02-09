@@ -339,7 +339,7 @@ function downloadTranscript() {
       "meetingTitle",
       "meetingStartTimeStamp",
     ],
-    function (result) {
+    async function (result) {
       if (result.userName && result.transcript && result.chatMessages) {
         // Create file name if values or provided, use default otherwise
         const fileName =
@@ -347,44 +347,90 @@ function downloadTranscript() {
             ? `Amurex/Transcript-${result.meetingTitle} at ${result.meetingStartTimeStamp}.txt`
             : `Amurex/Transcript.txt`;
 
-        const transcriptString = JSON.stringify(result.transcript, null, 2);
-        console.log(`THIS IS THE TRANSCRIPT BEFORE SAVING TO TXT: ${transcriptString}`);
-        
-            // Create an array to store lines of the text file
-        const lines = [];
+        let plt = await chrome.storage.local.get("platform");
+        let pltprop = plt.platform;
+        let transcriptString;
+        let textContent;
 
-        // Iterate through the transcript array and format each entry
-        result.transcript.forEach((entry) => {
-          lines.push(`${entry.personName} (${entry.timeStamp})`);
-          lines.push(entry.personTranscript);
-          // Add an empty line between entries
-          lines.push("");
-        });
-        lines.push("");
-        lines.push("");
+        console.log(result.transcript);
 
-        if (result.chatMessages.length > 0) {
-          // Iterate through the chat messages array and format each entry
-          lines.push("---------------");
-          lines.push("CHAT MESSAGES");
-          lines.push("---------------");
-          result.chatMessages.forEach((entry) => {
+        if (pltprop === "msteams") {
+          const uniqueMessages = Object.entries(result).reduce((acc, [key, value]) => {
+            if (key === 'transcript' && Array.isArray(value)) {
+                // First remove duplicates
+                const withoutDuplicates = value.filter((item, index, array) => {
+                    if (index === 0) return true;
+                    const prev = array[index - 1];
+                    return !(item.message === prev.message && item.speaker === prev.speaker);
+                });
+    
+                // Then group consecutive messages by speaker
+                const groupedTranscript = withoutDuplicates.reduce((grouped, current, index, array) => {
+                    if (index === 0 || current.speaker !== array[index - 1].speaker) {
+                        // Start new group
+                        grouped.push({
+                            speaker: current.speaker,
+                            message: current.message
+                        });
+                    } else {
+                        // Append to last group's message
+                        const lastGroup = grouped[grouped.length - 1];
+                        lastGroup.message += '. ' + current.message;
+                    }
+                    return grouped;
+                }, []);
+    
+                return { ...acc, [key]: groupedTranscript };
+            }
+            return { ...acc, [key]: value };
+          }, {});
+
+          transcriptString = Object.entries(uniqueMessages).map(([key, value]) => {
+              return `${JSON.stringify(value, null, 2)}`;
+          }).join('<br>');
+
+          textContent = transcriptString;
+        } else {
+          transcriptString = JSON.stringify(result.transcript, null, 2);
+
+          // Create an array to store lines of the text file
+          const lines = [];
+
+          // Iterate through the transcript array and format each entry
+          result.transcript.forEach((entry) => {
             lines.push(`${entry.personName} (${entry.timeStamp})`);
-            lines.push(entry.chatMessageText);
+            lines.push(entry.personTranscript);
             // Add an empty line between entries
             lines.push("");
           });
           lines.push("");
           lines.push("");
+
+          if (result.chatMessages.length > 0) {
+            // Iterate through the chat messages array and format each entry
+            lines.push("---------------");
+            lines.push("CHAT MESSAGES");
+            lines.push("---------------");
+            result.chatMessages.forEach((entry) => {
+              lines.push(`${entry.personName} (${entry.timeStamp})`);
+              lines.push(entry.chatMessageText);
+              // Add an empty line between entries
+              lines.push("");
+            });
+            lines.push("");
+            lines.push("");
+          }
+
+          // Join the lines into a single string, replace "You" with userName from storage
+          textContent = lines
+            .join("\n")
+            .replace(/You \(/g, result.userName + " (");
+
+          console.log(textContent);
         }
-
-        // Join the lines into a single string, replace "You" with userName from storage
-        const textContent = lines
-          .join("\n")
-          .replace(/You \(/g, result.userName + " (");
-
-        console.log(textContent);
-
+        
+        console.log(`THIS IS THE TRANSCRIPT BEFORE SAVING TO TXT: ${transcriptString}`);
+        
         // Create a blob containing the text content
         const blob = new Blob([textContent], { type: "text/plain" });
 
