@@ -161,6 +161,16 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     }
 
     chrome.storage.local.set({ navItem });
+  } else if (message.type === "fetch_late_summary") {
+    console.log("Fetching late summary");
+    fetchLateSummary(message.meetingId)
+      .then(data => { 
+        console.log("Late summary fetched");
+        console.log(data);
+        
+        sendResponse({ success: true, data }); })
+      .catch(error => sendResponse({ success: false, error: error.message }));
+    return true; // Required for async response
   }
 });
 
@@ -432,4 +442,22 @@ chrome.action.onClicked.addListener(async (tab) => {
   });
   chrome.sidePanel.open({ tabId: tab.id });
 });
+
+async function fetchLateSummary(meetingId) {
+  try {
+    const response = await fetch(
+      `${AMUREX_CONFIG.BASE_URL_BACKEND}/late_summary/${meetingId}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`Server responded with ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching late meeting summary:', error);
+    throw error;
+  }
+}
 

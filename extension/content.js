@@ -555,7 +555,7 @@ function meetingRoutines(uiType) {
             console.error(error);
             showNotification(extensionStatusJSON_bug);
           }
-        }, 500);
+        }, 1000);
 
         // Check authentication and show appropriate notification
         chrome.storage.sync.get(["operationMode"], async function (result) {
@@ -636,8 +636,8 @@ function meetingRoutines(uiType) {
 
 // Returns all elements of the specified selector type and specified textContent. Return array contains the actual element as well as all the upper parents.
 function contains(selector, text) {
-  var elements = document.querySelectorAll(selector);
-  return Array.prototype.filter.call(elements, function (element) {
+  const elements = document.querySelectorAll(selector);
+  return Array.prototype.filter.call(elements, element => {
     return RegExp(text).test(element.textContent);
   });
 }
@@ -700,10 +700,18 @@ function showNotification(extensionStatusJSON) {
     `;
   text.innerHTML = extensionStatusJSON.message;
 
-  // Remove banner after 5s
-  setTimeout(() => {
-    obj.style.display = "none";
-  }, 5000);
+  // Watch for the end button
+  const checkEndButton = setInterval(() => {
+    const endButtonExists = contains(
+      meetingEndIconData.selector,
+      meetingEndIconData.text
+    ).length > 0;
+
+    if (endButtonExists) {
+      obj.style.display = "none";
+      clearInterval(checkEndButton);
+    }
+  }, 1000);
 
   obj.appendChild(logo);
   obj.appendChild(text);
@@ -711,7 +719,7 @@ function showNotification(extensionStatusJSON) {
 }
 
 // Shows a notification that does not disappear
-function showNotificationLive(extensionStatusJSON) {
+function showNotificationLive() {
   let html = document.querySelector("html");
   let obj = document.createElement("div");
   obj.id = "live-notification";
@@ -747,7 +755,7 @@ function showNotificationLive(extensionStatusJSON) {
     color: #fff;
     margin: 10px 0;
   `;
-  text.innerHTML = extensionStatusJSON.message;
+  text.innerHTML = "Meeting ended. Would you like to see the summary and action items?";
 
   // Style button container
   buttonContainer.style.cssText = "display: flex; gap: 10px; margin-top: 10px;";
@@ -768,7 +776,6 @@ function showNotificationLive(extensionStatusJSON) {
 
   // Create No button
   let noButton = document.createElement("button");
-  noButton.id = "no-button";
   noButton.textContent = "No";
   noButton.style.cssText = `
     background: transparent;
@@ -782,38 +789,37 @@ function showNotificationLive(extensionStatusJSON) {
   `;
 
   // Add click handlers
-  yesButton.addEventListener("click", async () => {
-    // console.log("Yes button clicked");
+  yesButton.addEventListener("click", () => {
     const meetingId = document.location.pathname.split("/")[1].split("?")[0];
-    chrome.runtime.sendMessage({
-      type: "open_late_meeting_side_panel",
-      meetingId: meetingId,
-    });
+    createAnimatedPanel(meetingId);
     obj.remove();
   });
 
   noButton.addEventListener("click", () => {
-    obj.style.display = "none";
     obj.remove();
-    clearTimeout(obj.timeout);
   });
 
-  // Add buttons to container
-  buttonContainer.appendChild(yesButton);
-  buttonContainer.appendChild(noButton);
+  // Watch for the end button
+  const checkEndButton = setInterval(() => {
+    const endButtonExists = contains(
+      meetingEndIconData.selector,
+      meetingEndIconData.text
+    ).length > 0;
+
+    if (endButtonExists) {
+      obj.style.display = "none";
+      clearInterval(checkEndButton);
+    }
+  }, 1000);
 
   // Assemble the components
   obj.appendChild(logo);
   obj.appendChild(text);
   obj.appendChild(buttonContainer);
+  buttonContainer.appendChild(yesButton);
+  buttonContainer.appendChild(noButton);
 
   if (html) html.append(obj);
-
-  setTimeout(() => {
-    if (obj && obj.parentNode) {
-      obj.style.display = "none";
-    }
-  }, 4000);
 }
 
 // Shows a notification that does not disappear
@@ -1105,5 +1111,143 @@ function updateMeetingTitle() {
     overWriteChromeStorage(["meetingTitle"], false);
   } catch (error) {
     console.error(error);
+  }
+}
+
+// Add this function at the top level of your content.js
+function createAnimatedPanel(meetingId) {
+  const existingNotification = document.getElementById('live-notification');
+  
+  if (existingNotification) {
+    // Update the content with a more spacious layout
+    existingNotification.innerHTML = `
+      <div style="display: flex; align-items: flex-start; gap: 20px; width: 100%;">
+
+        <div class="expanded-content" style="flex-grow: 1;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <img src="https://www.amurex.ai/_next/image?url=%2F_next%2Fstatic%2Fmedia%2FAmurexLogo.56901b87.png&w=64&q=75" 
+                height="32px" 
+                width="32px" 
+                style="border-radius: 4px;"
+              />
+              <p style="color: #fff; margin: 0; font-size: 16px; font-weight: 500;">Meeting Summary</p>
+            </div>
+            <span style="color: rgba(255,255,255,0.6); font-size: 14px;">ID: ${meetingId}</span>
+          </div>
+          <div class="summary-preview" style="
+            background: rgba(255, 255, 255, 0.1);
+            padding: 16px;
+            border-radius: 8px;
+            margin: 10px 0;
+            max-height: 400px;
+            overflow-y: auto;
+          ">
+            <p style="color: #fff; margin: 0;">Loading summary...</p>
+          </div>
+          <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
+            <button class="close-btn" style="
+              background: transparent;
+              color: #c76dcc;
+              border: 1px solid #c76dcc;
+              padding: 8px 20px;
+              border-radius: 4px;
+              cursor: pointer;
+              font-family: 'Host Grotesk', sans-serif;
+              font-weight: 500;
+              font-size: 14px;
+            ">Close</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Update the notification styles
+    existingNotification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 50%;
+      transform: translateX(50%);
+      background: black;
+      padding: 24px;
+      border-radius: 12px;
+      z-index: 10000;
+      width: 60vw;
+      max-width: 1000px;
+      min-width: 600px;
+      font-family: "Host Grotesk", sans-serif;
+      transition: all 0.3s ease-in-out;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    `;
+
+    // Add click handler for close button
+    existingNotification.querySelector('.close-btn').addEventListener('click', () => {
+      existingNotification.remove();
+    });
+
+    // Watch for the end button
+    const checkEndButton = setInterval(() => {
+      const endButtonExists = contains(
+        meetingEndIconData.selector,
+        meetingEndIconData.text
+      ).length > 0;
+
+      if (endButtonExists) {
+        existingNotification.remove();
+        clearInterval(checkEndButton);
+      }
+    }, 1000);
+
+    // Get summary preview element and fetch data
+    const summaryPreview = existingNotification.querySelector('.summary-preview');
+    
+    // Fetch summary through background script
+    chrome.runtime.sendMessage(
+      { type: "fetch_late_summary", meetingId },
+      function(response) {
+        if (response.success && response.data) {
+          const data = response.data;
+          summaryPreview.innerHTML = `
+            <div class="notes-content" style="color: #fff;">${
+              data.late_summary
+                ? data.late_summary
+                    .trim()
+                    .split("\n")
+                    .filter((line) => line.trim() !== "")
+                    .map((line) => {
+                      // Handle headings first
+                      if (line.startsWith('### ')) {
+                        return `<h3 style="color: #fff; font-size: 16px; margin: 16px 0 8px 0;">${line.substring(4)}</h3>`;
+                      } else if (line.startsWith('## ')) {
+                        return `<h2 style="color: #fff; font-size: 18px; margin: 20px 0 10px 0;">${line.substring(3)}</h2>`;
+                      } else if (line.startsWith('# ')) {
+                        return `<h1 style="color: #fff; font-size: 20px; margin: 24px 0 12px 0;">${line.substring(2)}</h1>`;
+                      } else if (line.startsWith('- ')) {
+                        return `<li style="margin-bottom: 8px;">${line.substring(2)}</li>`;
+                      } else {
+                        return line
+                          .replace(/\*\*(.*?)\*\*/g, "<strong style='color: #c76dcc'>$1</strong>")
+                          .replace(/\*(.*?)\*/g, "<em>$1</em>")
+                          .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" style="color: #c76dcc; text-decoration: none;">$1</a>');
+                      }
+                    })
+                    .join("\n")
+                    .replace(
+                      /(<li>.*?<\/li>)\n?(<li>.*?<\/li>)+/g,
+                      (list) => `<ul style="list-style-type: none; padding-left: 0;">${list}</ul>`
+                    )
+                    .replace(/\n/g, "<br>")
+                : "No meeting notes available yet."
+            }</div>
+          `;
+        } else {
+          summaryPreview.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+              <p style="color: #fff; margin: 0; font-size: 14px;">Failed to load meeting summary. Please try again later.</p>
+            </div>
+          `;
+        }
+      }
+    );
   }
 }
