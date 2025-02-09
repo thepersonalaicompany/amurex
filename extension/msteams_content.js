@@ -56,37 +56,71 @@ function checkTeamsMeetingStart() {
 
 // Function to activate captions in Teams
 function activateCaptionsInTeams() {
-    return new Promise((resolve) => {
-        const showMoreButton = document.getElementById("callingButtons-showMoreBtn");
-
-        if (showMoreButton) {
-            console.log("found the button");
+    return new Promise(async (resolve) => {
+        try {
+            // Step 1: Click show more button and wait for menu
+            const showMoreButton = document.getElementById("callingButtons-showMoreBtn");
+            if (!showMoreButton) {
+                console.log("Show more button not found");
+                return resolve();
+            }
+            
+            console.log("Clicking show more button");
             showMoreButton.click();
+            
+            // Wait for language menu to appear
+            const languageSpeechMenuControl = await waitForElement("LanguageSpeechMenuControl-id", 5000);
+            if (!languageSpeechMenuControl) {
+                console.log("Language menu did not appear");
+                return resolve();
+            }
 
-            const waitForElement = setInterval(() => {
-                const languageSpeechMenuControl = document.getElementById("LanguageSpeechMenuControl-id");
+            console.log("Clicking language menu");
+            languageSpeechMenuControl.click();
 
-                if (languageSpeechMenuControl) {
-                    clearInterval(waitForElement);
-                    languageSpeechMenuControl.click();
+            // Wait for captions button to appear
+            const captionsButton = await waitForElement("closed-captions-button", 5000);
+            if (!captionsButton) {
+                console.log("Captions button did not appear");
+                return resolve();
+            }
 
-                    const waitForCaptionsButton = setInterval(() => {
-                        const captionsButton = document.getElementById("closed-captions-button");
+            console.log("Clicking captions button");
+            captionsButton.click();
+            console.log("Captions activated in Microsoft Teams");
+            resolve();
 
-                        if (captionsButton) {
-                            clearInterval(waitForCaptionsButton);
-                            captionsButton.click();
-
-                            console.log("Captions activated in Microsoft Teams.");
-                            resolve(); // Resolve the promise when captions are activated
-                        }
-                    }, 1000); // Check every 500 milliseconds
-                }
-            }, 1000); // Check every 500 milliseconds
-        } else {
-            console.log("Unable to find the necessary elements to activate captions.");
-            resolve(); // Resolve the promise if elements are not found
+        } catch (error) {
+            console.error("Error activating captions:", error);
+            resolve();
         }
+    });
+}
+
+// Helper function to wait for an element
+function waitForElement(elementId, timeout) {
+    return new Promise((resolve) => {
+        const element = document.getElementById(elementId);
+        if (element) {
+            return resolve(element);
+        }
+
+        const startTime = Date.now();
+        const observer = new MutationObserver(() => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                observer.disconnect();
+                resolve(element);
+            } else if (Date.now() - startTime >= timeout) {
+                observer.disconnect();
+                resolve(null);
+            }
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
     });
 }
 
@@ -143,23 +177,26 @@ function setupObserver() {
                                     const messageElement = messageDiv.querySelector('[data-tid="closed-caption-text"]');
                                     
                                     const speakerName = nameElement ? nameElement.textContent.trim() : "Unknown";
-                                    let lastRecordedMessage = ""; // Temporary variable to store the last message
+                                    const messageText = messageElement ? messageElement.textContent.trim() : "";
+
+                                    // Push the initial message to transcriptMessages
+                                    transcriptMessages.push({ speaker: speakerName, message: messageText });
 
                                     // Set up an observer for the message text element
                                     const messageObserver = new MutationObserver(() => {
                                         const updatedMessageText = messageElement.textContent.trim();
                                         console.log(`updatedMessageText: ${updatedMessageText}`);
-                                        console.log(`lastRecordedMessage: ${lastRecordedMessage}`);
-                                        if (updatedMessageText !== lastRecordedMessage) {
+                                        if (updatedMessageText !== messageText) {
                                             console.log(`Updated Message: ${updatedMessageText}`);
-                                            // Append each change to the transcript array
-                                            transcriptMessages.push({ speaker: speakerName, message: updatedMessageText });
-                                            lastRecordedMessage = updatedMessageText; // Update the temporary variable
+                                            // Update the last message in the transcript array
+                                            transcriptMessages[transcriptMessages.length - 1].message = updatedMessageText;
                                         }
                                     });
 
                                     messageObserver.observe(messageElement, { childList: true, characterData: true, subtree: true });
                                 });
+
+                                // here
                             } else {
                                 console.log("Node does not match expected chat message structure.");
                             }

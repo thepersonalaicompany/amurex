@@ -82,7 +82,38 @@ async function fetchAINotes() {
     let pltprop = plt.platform;
 
     if (pltprop === "msteams") {
-      resultString = Object.entries(result).map(([key, value]) => {
+      // Filter duplicates and group by speaker
+      const uniqueMessages = Object.entries(result).reduce((acc, [key, value]) => {
+        if (key === 'transcript' && Array.isArray(value)) {
+            // First remove duplicates
+            const withoutDuplicates = value.filter((item, index, array) => {
+                if (index === 0) return true;
+                const prev = array[index - 1];
+                return !(item.message === prev.message && item.speaker === prev.speaker);
+            });
+
+            // Then group consecutive messages by speaker
+            const groupedTranscript = withoutDuplicates.reduce((grouped, current, index, array) => {
+                if (index === 0 || current.speaker !== array[index - 1].speaker) {
+                    // Start new group
+                    grouped.push({
+                        speaker: current.speaker,
+                        message: current.message
+                    });
+                } else {
+                    // Append to last group's message
+                    const lastGroup = grouped[grouped.length - 1];
+                    lastGroup.message += '. ' + current.message;
+                }
+                return grouped;
+            }, []);
+
+            return { ...acc, [key]: groupedTranscript };
+        }
+        return { ...acc, [key]: value };
+      }, {});
+
+      resultString = Object.entries(uniqueMessages).map(([key, value]) => {
           return `<strong>${key}:</strong> ${JSON.stringify(value, null, 2)}`;
       }).join('<br>');
       formattedTranscript = resultString;
@@ -109,7 +140,7 @@ async function fetchAINotes() {
     .then(response => response.json())
     .then(data => {
       // Display the Notion link and meeting notes
-      summaryDiv.innerHTML = `<p>asd${formattedTranscript}</p>
+      summaryDiv.innerHTML = `<p>${formattedTranscript}</p>
         <div class="notes-content">${
           data.notes_content
             ? data.notes_content
