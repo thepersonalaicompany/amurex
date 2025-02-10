@@ -1,8 +1,3 @@
-const plt = {platform: "gmeet"};
-chrome.storage.local.set(plt);
-console.log("Google Meet platform local variable has been set");
-
-
 //*********** GLOBAL VARIABLES **********//
 const timeFormat = {
   year: "numeric",
@@ -114,27 +109,6 @@ function setupWebSocket() {
 
       const userId = response.userId;
       console.log("User ID:", userId);
-      console.log("Meeting ID:", meetingId);
-
-      const setMeetingId = async (mId) => {
-        return new Promise((resolve, reject) => {
-          chrome.storage.local.set({ mId }, () => {
-            if (chrome.runtime.lastError) {
-              return reject(chrome.runtime.lastError);
-            }
-            resolve(`Meeting ID set to: ${mId}`);
-          });
-        });
-      };
-
-      (async () => {
-        try {
-          const result = await setMeetingId(meetingId); // Replace '12345' with your desired meeting ID
-          console.log(result);
-        } catch (error) {
-          console.error("Error setting Meeting ID:", error);
-        }
-      })();
 
       const wsUrl = `wss://${BASE_URL_BACKEND.replace(
         "https://",
@@ -256,9 +230,9 @@ const debouncedDoStuff = async function () {
     }
 
     // Send suggestion check via WebSocket
-    chrome.storage.local.get(["isFileUploaded"], function (result) {
+    chrome.storage.local.get(["isFileUploaded"], function(result) {
       const isFileUploaded = result.isFileUploaded;
-
+      
       // Now you can use isFileUploaded in your WebSocket message
       ws.send(
         JSON.stringify({
@@ -266,7 +240,7 @@ const debouncedDoStuff = async function () {
           data: {
             transcript: formattedPayload,
             user_id: userId,
-            isFileUploaded: isFileUploaded,
+            isFileUploaded: isFileUploaded
           },
         })
       );
@@ -277,26 +251,7 @@ const debouncedDoStuff = async function () {
       if (!event.data) {
         return;
       }
-      let data;
-      try {
-        data = JSON.parse(event.data);
-      } catch (error) {
-        console.error("Error parsing WebSocket message:", error);
-        chrome.storage.local.get(["meetingQA"], function (result) {
-          let qaHistory = result.meetingQA || [];
-          qaHistory.push({
-            timestamp: new Date().toISOString(),
-            question: "Error processing response",
-            answer: "Failed to generate meeting notes. Please try again later.",
-            meetingId: document.location.pathname.split("/")[1].split("?")[0],
-            type: "error_notification",
-          });
-          chrome.storage.local.set({ meetingQA: qaHistory }, function () {
-            console.log("Error notification stored in meetingQA");
-          });
-        });
-        return;
-      }
+      const data = JSON.parse(event.data);
       // Check for exceeded_response type
       if (data.type === "exceeded_response") {
         console.log("Response limit exceeded, stopping transcript processing");
@@ -513,21 +468,12 @@ function meetingRoutines(uiType) {
 
         // CRITICAL DOM DEPENDENCY. Grab the transcript element. This element is present, irrespective of captions ON/OFF, so this executes independent of operation mode.
         const transcriptTargetNode = document.querySelector(".a4cQT");
-        // attempt one to dim down the transcript
-        if (transcriptTargetNode) {
-          transcriptTargetNode.style.position = "absolute";
-        }
-
         // Attempt to dim down the transcript
         try {
-          // console.log("This is the transcriptTargetNode", transcriptTargetNode);
           transcriptTargetNode.firstChild.style.opacity = 0.2;
         } catch (error) {
           console.error(error);
         }
-
-        // transcriptTargetNode.style.position = "absolute";
-        // console.log(transcriptTargetNode);
 
         // Create transcript observer instance linked to the callback function. Registered irrespective of operation mode, so that any visible transcript can be picked up during the meeting, independent of the operation mode.
         const transcriptObserver = new MutationObserver(transcriber);
@@ -560,7 +506,7 @@ function meetingRoutines(uiType) {
             console.error(error);
             showNotification(extensionStatusJSON_bug);
           }
-        }, 1000);
+        }, 500);
 
         // Check authentication and show appropriate notification
         chrome.storage.sync.get(["operationMode"], async function (result) {
@@ -603,13 +549,9 @@ function meetingRoutines(uiType) {
           }
 
           // Clear meetingQA from storage
-          console.log("Setting hasMeetingEnded to true");
-          chrome.storage.local.set(
-            { meetingQA: [], hasMeetingEnded: true },
-            function () {
-              console.log("Meeting QA cleared due to meeting end");
-            }
-          );
+          chrome.storage.local.set({ meetingQA: [] }, function () {
+            console.log("Meeting QA cleared due to meeting end");
+          });
 
           transcriptObserver.disconnect();
           chatMessagesObserver.disconnect();
@@ -623,12 +565,11 @@ function meetingRoutines(uiType) {
             "Saving to chrome storage and sending message to download transcript from background script"
           );
 
-          chrome.runtime.sendMessage({ type: "meeting_ended" });
           chrome.runtime.sendMessage({ type: "open_side_panel" });
 
           // can you send a notification to user saying that we are processing the transcript?
           overWriteChromeStorage(["transcript", "chatMessages"], true);
-
+          // showSidebar();
           // we will need to make an API call here to save the transcript to the cloud
         });
       } catch (error) {
@@ -641,8 +582,8 @@ function meetingRoutines(uiType) {
 
 // Returns all elements of the specified selector type and specified textContent. Return array contains the actual element as well as all the upper parents.
 function contains(selector, text) {
-  const elements = document.querySelectorAll(selector);
-  return Array.prototype.filter.call(elements, element => {
+  var elements = document.querySelectorAll(selector);
+  return Array.prototype.filter.call(elements, function (element) {
     return RegExp(text).test(element.textContent);
   });
 }
@@ -705,18 +646,10 @@ function showNotification(extensionStatusJSON) {
     `;
   text.innerHTML = extensionStatusJSON.message;
 
-  // Watch for the end button
-  const checkEndButton = setInterval(() => {
-    const endButtonExists = contains(
-      meetingEndIconData.selector,
-      meetingEndIconData.text
-    ).length > 0;
-
-    if (endButtonExists) {
-      obj.style.display = "none";
-      clearInterval(checkEndButton);
-    }
-  }, 1000);
+  // Remove banner after 5s
+  setTimeout(() => {
+    obj.style.display = "none";
+  }, 5000);
 
   obj.appendChild(logo);
   obj.appendChild(text);
@@ -724,7 +657,7 @@ function showNotification(extensionStatusJSON) {
 }
 
 // Shows a notification that does not disappear
-function showNotificationLive() {
+function showNotificationLive(extensionStatusJSON) {
   let html = document.querySelector("html");
   let obj = document.createElement("div");
   obj.id = "live-notification";
@@ -760,7 +693,7 @@ function showNotificationLive() {
     color: #fff;
     margin: 10px 0;
   `;
-  text.innerHTML = "Meeting ended. Would you like to see the summary and action items?";
+  text.innerHTML = extensionStatusJSON.message;
 
   // Style button container
   buttonContainer.style.cssText = "display: flex; gap: 10px; margin-top: 10px;";
@@ -769,7 +702,7 @@ function showNotificationLive() {
   let yesButton = document.createElement("button");
   yesButton.textContent = "Yes";
   yesButton.style.cssText = `
-    background: #c76dcc;
+    background: rgb(209, 173, 211);
     color: white;
     border: none;
     padding: 5px 15px;
@@ -781,11 +714,12 @@ function showNotificationLive() {
 
   // Create No button
   let noButton = document.createElement("button");
+  noButton.id = "no-button";
   noButton.textContent = "No";
   noButton.style.cssText = `
     background: transparent;
-    color: #c76dcc;
-    border: 1px solid #c76dcc;
+    color: rgb(209, 173, 211);
+    border: 1px solid rgb(209, 173, 211);
     padding: 5px 15px;
     border-radius: 4px;
     cursor: pointer;
@@ -794,37 +728,38 @@ function showNotificationLive() {
   `;
 
   // Add click handlers
-  yesButton.addEventListener("click", () => {
+  yesButton.addEventListener("click", async () => {
+    // console.log("Yes button clicked");
     const meetingId = document.location.pathname.split("/")[1].split("?")[0];
-    createAnimatedPanel(meetingId);
+    chrome.runtime.sendMessage({
+      type: "open_late_meeting_side_panel",
+      meetingId: meetingId,
+    });
     obj.remove();
   });
 
   noButton.addEventListener("click", () => {
+    obj.style.display = "none";
     obj.remove();
+    clearTimeout(obj.timeout);
   });
 
-  // Watch for the end button
-  const checkEndButton = setInterval(() => {
-    const endButtonExists = contains(
-      meetingEndIconData.selector,
-      meetingEndIconData.text
-    ).length > 0;
-
-    if (endButtonExists) {
-      obj.style.display = "none";
-      clearInterval(checkEndButton);
-    }
-  }, 1000);
+  // Add buttons to container
+  buttonContainer.appendChild(yesButton);
+  buttonContainer.appendChild(noButton);
 
   // Assemble the components
   obj.appendChild(logo);
   obj.appendChild(text);
   obj.appendChild(buttonContainer);
-  buttonContainer.appendChild(yesButton);
-  buttonContainer.appendChild(noButton);
 
   if (html) html.append(obj);
+
+  setTimeout(() => {
+    if (obj && obj.parentNode) {
+      obj.style.display = "none";
+    }
+  }, 4000);
 }
 
 // Shows a notification that does not disappear
@@ -900,6 +835,101 @@ function showNotificationContextual(extensionStatusJSON) {
   obj.prepend(text);
   obj.prepend(logo);
   if (html) html.append(obj);
+}
+
+async function fetchAINotes(summaryDiv, actionItemsDiv) {
+  try {
+    // Show loading state
+    summaryDiv.innerHTML =
+      '<div class="loading">Generating meeting notes...</div>';
+    actionItemsDiv.innerHTML =
+      '<div class="loading">Generating action items...</div>';
+
+    // Get transcript from storage
+    const result = await chrome.storage.local.get(["transcript"]);
+
+    if (!result.transcript || result.transcript.length === 0) {
+      summaryDiv.innerHTML =
+        "<p>No transcript available to generate notes.</p>";
+      actionItemsDiv.innerHTML = "<p>No action items available.</p>";
+      return;
+    }
+
+    // Format transcript data
+    const formattedTranscript = result.transcript
+      .map((entry) => ({
+        personName: entry.personName,
+        timeStamp: entry.timeStamp,
+        transcriptText: entry.personTranscript,
+      }))
+      .map(
+        (entry) =>
+          `${entry.personName} (${entry.timeStamp})\n${entry.transcriptText}\n`
+      )
+      .join("");
+
+    const body = {
+      transcript: formattedTranscript,
+    };
+
+    // Make API request
+    const response = await fetch(`${BASE_URL_BACKEND}/generate_actions`, {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      console.log("Transcript generation failed", formattedTranscript);
+      throw new Error(`Server responded with ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Display the Notion link and meeting notes
+    summaryDiv.innerHTML = `
+      <div class="notes-content">${
+        data.notes_content
+          ? data.notes_content
+              .trim()
+              .split("\n")
+              .filter((line) => line.trim() !== "")
+              .map((line) =>
+                line.startsWith("- ")
+                  ? `<li>${line.substring(2)}</li>` // Handle list items
+                  : line // Keep other lines as is
+                      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                      .replace(/\*(.*?)\*/g, "<em>$1</em>")
+                      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
+              )
+              .join("\n") // Restore newlines
+              .replace(
+                /(<li>.*?<\/li>)\n?(<li>.*?<\/li>)+/g,
+                (list) => `<ul>${list}</ul>`
+              ) // Wrap consecutive list items
+              .replace(/\n/g, "<br>") // Convert remaining newlines to <br>
+          : "No meeting notes available."
+      }</div>
+    `;
+
+    // Display the action items with markdown formatting
+    actionItemsDiv.innerHTML = `
+      <div class="action-items">${
+        data.action_items || "No action items available."
+      }</div>
+    `;
+
+    // Initialize email options with the data
+    // generateEmailOptions(data);
+  } catch (error) {
+    console.error("Error generating notes:", error);
+    summaryDiv.innerHTML =
+      "<p>Failed to generate meeting notes. Please try again later.</p>";
+    actionItemsDiv.innerHTML = `<p class="error-details">Error: ${error.message}</p>`;
+  }
 }
 
 // CSS for notification
@@ -1116,143 +1146,5 @@ function updateMeetingTitle() {
     overWriteChromeStorage(["meetingTitle"], false);
   } catch (error) {
     console.error(error);
-  }
-}
-
-// Add this function at the top level of your content.js
-function createAnimatedPanel(meetingId) {
-  const existingNotification = document.getElementById('live-notification');
-  
-  if (existingNotification) {
-    // Update the content with a more spacious layout
-    existingNotification.innerHTML = `
-      <div style="display: flex; align-items: flex-start; gap: 20px; width: 100%;">
-
-        <div class="expanded-content" style="flex-grow: 1;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <img src="https://www.amurex.ai/_next/image?url=%2F_next%2Fstatic%2Fmedia%2FAmurexLogo.56901b87.png&w=64&q=75" 
-                height="32px" 
-                width="32px" 
-                style="border-radius: 4px;"
-              />
-              <p style="color: #fff; margin: 0; font-size: 16px; font-weight: 500;">Meeting Summary</p>
-            </div>
-            <span style="color: rgba(255,255,255,0.6); font-size: 14px;">ID: ${meetingId}</span>
-          </div>
-          <div class="summary-preview" style="
-            background: rgba(255, 255, 255, 0.1);
-            padding: 16px;
-            border-radius: 8px;
-            margin: 10px 0;
-            max-height: 400px;
-            overflow-y: auto;
-          ">
-            <p style="color: #fff; margin: 0;">Loading summary...</p>
-          </div>
-          <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
-            <button class="close-btn" style="
-              background: transparent;
-              color: #c76dcc;
-              border: 1px solid #c76dcc;
-              padding: 8px 20px;
-              border-radius: 4px;
-              cursor: pointer;
-              font-family: 'Host Grotesk', sans-serif;
-              font-weight: 500;
-              font-size: 14px;
-            ">Close</button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    // Update the notification styles
-    existingNotification.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 50%;
-      transform: translateX(50%);
-      background: black;
-      padding: 24px;
-      border-radius: 12px;
-      z-index: 10000;
-      width: 60vw;
-      max-width: 1000px;
-      min-width: 600px;
-      font-family: "Host Grotesk", sans-serif;
-      transition: all 0.3s ease-in-out;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    `;
-
-    // Add click handler for close button
-    existingNotification.querySelector('.close-btn').addEventListener('click', () => {
-      existingNotification.remove();
-    });
-
-    // Watch for the end button
-    const checkEndButton = setInterval(() => {
-      const endButtonExists = contains(
-        meetingEndIconData.selector,
-        meetingEndIconData.text
-      ).length > 0;
-
-      if (endButtonExists) {
-        existingNotification.remove();
-        clearInterval(checkEndButton);
-      }
-    }, 1000);
-
-    // Get summary preview element and fetch data
-    const summaryPreview = existingNotification.querySelector('.summary-preview');
-    
-    // Fetch summary through background script
-    chrome.runtime.sendMessage(
-      { type: "fetch_late_summary", meetingId },
-      function(response) {
-        if (response.success && response.data) {
-          const data = response.data;
-          summaryPreview.innerHTML = `
-            <div class="notes-content" style="color: #fff;">${
-              data.late_summary
-                ? data.late_summary
-                    .trim()
-                    .split("\n")
-                    .filter((line) => line.trim() !== "")
-                    .map((line) => {
-                      // Handle headings first
-                      if (line.startsWith('### ')) {
-                        return `<h3 style="color: #fff; font-size: 16px; margin: 16px 0 8px 0;">${line.substring(4)}</h3>`;
-                      } else if (line.startsWith('## ')) {
-                        return `<h2 style="color: #fff; font-size: 18px; margin: 20px 0 10px 0;">${line.substring(3)}</h2>`;
-                      } else if (line.startsWith('# ')) {
-                        return `<h1 style="color: #fff; font-size: 20px; margin: 24px 0 12px 0;">${line.substring(2)}</h1>`;
-                      } else if (line.startsWith('- ')) {
-                        return `<li style="margin-bottom: 8px;">${line.substring(2)}</li>`;
-                      } else {
-                        return line
-                          .replace(/\*\*(.*?)\*\*/g, "<strong style='color: #c76dcc'>$1</strong>")
-                          .replace(/\*(.*?)\*/g, "<em>$1</em>")
-                          .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" style="color: #c76dcc; text-decoration: none;">$1</a>');
-                      }
-                    })
-                    .join("\n")
-                    .replace(
-                      /(<li>.*?<\/li>)\n?(<li>.*?<\/li>)+/g,
-                      (list) => `<ul style="list-style-type: none; padding-left: 0;">${list}</ul>`
-                    )
-                    .replace(/\n/g, "<br>")
-                : "No meeting notes available yet."
-            }</div>
-          `;
-        } else {
-          summaryPreview.innerHTML = `
-            <div style="text-align: center; padding: 20px;">
-              <p style="color: #fff; margin: 0; font-size: 14px;">Failed to load meeting summary. Please try again later.</p>
-            </div>
-          `;
-        }
-      }
-    );
   }
 }

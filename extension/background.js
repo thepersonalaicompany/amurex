@@ -282,7 +282,11 @@ async function injectNotification() {
   let yesButton = document.createElement("button");
   yesButton.textContent = "Yes";
   yesButton.style.cssText = `
+<<<<<<< HEAD
     background: #c76dcc;
+=======
+    background: rgb(209, 173, 211);
+>>>>>>> draft-msteams
     color: white;
     border: none;
     padding: 5px 15px;
@@ -298,8 +302,13 @@ async function injectNotification() {
   noButton.textContent = "No";
   noButton.style.cssText = `
     background: transparent;
+<<<<<<< HEAD
     color: #c76dcc;
     border: 1px solid #c76dcc;
+=======
+    color: rgb(209, 173, 211);
+    border: 1px solid rgb(209, 173, 211);
+>>>>>>> draft-msteams
     padding: 5px 15px;
     border-radius: 4px;
     cursor: pointer;
@@ -344,55 +353,103 @@ function downloadTranscript() {
       "meetingTitle",
       "meetingStartTimeStamp",
     ],
-    function (result) {
+    async function (result) {
       if (result.userName && result.transcript && result.chatMessages) {
-        // Create file name if values or provided, use default otherwise
-        const fileName =
-          result.meetingTitle && result.meetingStartTimeStamp
-            ? `Amurex/Transcript-${result.meetingTitle} at ${result.meetingStartTimeStamp}.txt`
+        let plt = await chrome.storage.local.get("platform");
+        let pltprop = plt.platform;
+
+        let textContent; // Declare textContent outside the if/else blocks
+        let fileName;
+
+        if (pltprop === "msteams") {
+          fileName =
+          result.meetingStartTimeStamp
+            ? `Amurex/Transcript | MS Teams meeting at ${result.meetingStartTimeStamp}.txt`
             : `Amurex/Transcript.txt`;
 
-        const transcriptString = JSON.stringify(result.transcript, null, 2);
-        console.log(`THIS IS THE TRANSCRIPT BEFORE SAVING TO TXT: ${transcriptString}`);
-        
-            // Create an array to store lines of the text file
-        const lines = [];
+          const uniqueMessages = Object.entries(result.transcript).reduce((acc, [key, value]) => {
+            if (key === 'transcript' && Array.isArray(value)) {
+                // First remove duplicates
+              const withoutDuplicates = value.filter((item, index, array) => {
+                  if (index === 0) return true;
+                  const prev = array[index - 1];
+                  return !(item.message === prev.message && item.speaker === prev.speaker);
+              });
 
-        // Iterate through the transcript array and format each entry
-        result.transcript.forEach((entry) => {
-          lines.push(`${entry.personName} (${entry.timeStamp})`);
-          lines.push(entry.personTranscript);
-          // Add an empty line between entries
-          lines.push("");
-        });
-        lines.push("");
-        lines.push("");
+              // Then group consecutive messages by speaker
+              const groupedTranscript = withoutDuplicates.reduce((grouped, current, index, array) => {
+                  if (index === 0 || current.speaker !== array[index - 1].speaker) {
+                      // Start new group
+                      grouped.push({
+                          speaker: current.speaker,
+                          message: current.message,
+                          timestamp: current.timestamp
+                      });
+                  } else {
+                      // Append to last group's message
+                      const lastGroup = grouped[grouped.length - 1];
+                      lastGroup.message += '. ' + current.message;
+                  }
+                  return grouped;
+              }, []);
 
-        if (result.chatMessages.length > 0) {
-          // Iterate through the chat messages array and format each entry
-          lines.push("---------------");
-          lines.push("CHAT MESSAGES");
-          lines.push("---------------");
-          result.chatMessages.forEach((entry) => {
+              return { ...acc, [key]: groupedTranscript };
+            }
+            return { ...acc, [key]: value };
+          }, {});
+
+          // Format the transcript in the desired style
+          textContent = Object.values(uniqueMessages).map(entry => {
+            return `${entry.speaker} (${entry.timestamp})\n${entry.message}\n`;
+          }).join('\n');
+
+          console.log("MS Teams transcript:", textContent);
+        } else {
+
+          fileName =
+          result.meetingTitle && result.meetingStartTimeStamp
+            ? `Amurex/Transcript | Google Meet at ${result.meetingStartTimeStamp}.txt`
+            : `Amurex/Transcript.txt`;
+
+          // Create an array to store lines of the text file
+          const lines = [];
+
+          // Iterate through the transcript array and format each entry
+          result.transcript.forEach((entry) => {
             lines.push(`${entry.personName} (${entry.timeStamp})`);
-            lines.push(entry.chatMessageText);
+            lines.push(entry.personTranscript);
             // Add an empty line between entries
             lines.push("");
           });
           lines.push("");
           lines.push("");
+
+          if (result.chatMessages.length > 0) {
+            // Iterate through the chat messages array and format each entry
+            lines.push("---------------");
+            lines.push("CHAT MESSAGES");
+            lines.push("---------------");
+            result.chatMessages.forEach((entry) => {
+              lines.push(`${entry.personName} (${entry.timeStamp})`);
+              lines.push(entry.chatMessageText);
+              // Add an empty line between entries
+              lines.push("");
+            });
+            lines.push("");
+            lines.push("");
+          }
+
+          // Join the lines into a single string, replace "You" with userName from storage
+          textContent = lines
+            .join("\n")
+            .replace(/You \(/g, result.userName + " (");
+
+          console.log("Regular transcript:", textContent);
         }
-
-        // Join the lines into a single string, replace "You" with userName from storage
-        const textContent = lines
-          .join("\n")
-          .replace(/You \(/g, result.userName + " (");
-
-        console.log(textContent);
-
+        
         // Create a blob containing the text content
         const blob = new Blob([textContent], { type: "text/plain" });
-
+        
         // Read the blob as a data URL
         const reader = new FileReader();
 
@@ -438,6 +495,7 @@ chrome.action.onClicked.addListener(async (tab) => {
   chrome.sidePanel.open({ tabId: tab.id });
 });
 
+<<<<<<< HEAD
 async function fetchLateSummary(meetingId) {
   try {
     const response = await fetch(
@@ -456,3 +514,5 @@ async function fetchLateSummary(meetingId) {
   }
 }
 
+=======
+>>>>>>> draft-msteams

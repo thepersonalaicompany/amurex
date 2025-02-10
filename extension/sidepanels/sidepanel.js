@@ -75,7 +75,7 @@ async function fetchAINotes() {
     }
 
     // Format transcript data
-    const formattedTranscript = result.transcript
+    let formattedTranscript = result.transcript
       .map((entry) => ({
         personName: entry.personName,
         timeStamp: entry.timeStamp,
@@ -112,6 +112,52 @@ async function fetchAINotes() {
     console.log(`Meeting ID retrieved: ${meetingId}`);
     console.log(`User ID retrieved: ${userId}`);
     
+<<<<<<< HEAD
+=======
+    let resultString = "";
+    let plt = await chrome.storage.local.get("platform");
+    let pltprop = plt.platform;
+
+    if (pltprop === "msteams") {
+      // Filter duplicates and group by speaker
+      const uniqueMessages = Object.entries(result.transcript).reduce((acc, [key, value]) => {
+        if (key === 'transcript' && Array.isArray(value)) {
+            // First remove duplicates
+          const withoutDuplicates = value.filter((item, index, array) => {
+              if (index === 0) return true;
+              const prev = array[index - 1];
+              return !(item.message === prev.message && item.speaker === prev.speaker);
+          });
+
+          // Then group consecutive messages by speaker
+          const groupedTranscript = withoutDuplicates.reduce((grouped, current, index, array) => {
+              if (index === 0 || current.speaker !== array[index - 1].speaker) {
+                  // Start new group
+                  grouped.push({
+                      speaker: current.speaker,
+                      message: current.message,
+                      timestamp: current.timestamp
+                  });
+              } else {
+                  // Append to last group's message
+                  const lastGroup = grouped[grouped.length - 1];
+                  lastGroup.message += '. ' + current.message;
+              }
+              return grouped;
+          }, []);
+
+          return { ...acc, [key]: groupedTranscript };
+        }
+        return { ...acc, [key]: value };
+      }, {});
+
+      // Format the transcript in the desired style
+      formattedTranscript = Object.values(uniqueMessages).map(entry => {
+        return `${entry.speaker} (${entry.timestamp})\n${entry.message}\n`;
+      }).join('\n');
+    }
+
+>>>>>>> draft-msteams
     const body = {
       transcript: formattedTranscript,
       meeting_id: meetingId,
