@@ -1,10 +1,6 @@
 {
   "name": "Amurex (Early Preview)",
-<<<<<<< HEAD
   "version": "1.0.20",
-=======
-  "version": "1.0.17",
->>>>>>> draft-msteams
   "manifest_version": 3,
   "description": "Your AI meeting Copilot",
   "side_panel": {

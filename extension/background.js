@@ -282,11 +282,7 @@ async function injectNotification() {
   let yesButton = document.createElement("button");
   yesButton.textContent = "Yes";
   yesButton.style.cssText = `
-<<<<<<< HEAD
     background: #c76dcc;
-=======
-    background: rgb(209, 173, 211);
->>>>>>> draft-msteams
     color: white;
     border: none;
     padding: 5px 15px;
@@ -302,13 +298,8 @@ async function injectNotification() {
   noButton.textContent = "No";
   noButton.style.cssText = `
     background: transparent;
-<<<<<<< HEAD
     color: #c76dcc;
     border: 1px solid #c76dcc;
-=======
-    color: rgb(209, 173, 211);
-    border: 1px solid rgb(209, 173, 211);
->>>>>>> draft-msteams
     padding: 5px 15px;
     border-radius: 4px;
     cursor: pointer;
@@ -495,7 +486,6 @@ chrome.action.onClicked.addListener(async (tab) => {
   chrome.sidePanel.open({ tabId: tab.id });
 });
 
-<<<<<<< HEAD
 async function fetchLateSummary(meetingId) {
   try {
     const response = await fetch(
@@ -514,5 +504,3 @@ async function fetchLateSummary(meetingId) {
   }
 }
 
-=======
->>>>>>> draft-msteams
