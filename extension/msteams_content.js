@@ -1,3 +1,9 @@
+let meetingStartTimeStamp = new Date()
+    .toLocaleString("default", timeFormat)
+    .replace(/[/:]/g, "-")
+    .toUpperCase();
+overWriteChromeStorage(["meetingStartTimeStamp"], false);
+
 const plt = {platform: "msteams"};
 chrome.storage.local.set(plt);
 console.log("MS teams platform local variable has been set");
@@ -28,6 +34,38 @@ function checkTeamsMeetingStart() {
                 setupObserver();
                 console.log(`this is captionsactivated: ${captionsActivated}`);
                 observerInitialized = true;
+
+                // Generate a UUID for the meeting ID
+                const generateMeetingId = () => {
+                    return 'ms-xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                        const r = Math.random() * 16 | 0;
+                        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                        return v.toString(16);
+                    });
+                };
+
+                const meetingId = generateMeetingId();
+                console.log(`Generated meeting ID: ${meetingId}`);
+
+                const setMeetingId = async (mId) => {
+                    return new Promise((resolve, reject) => {
+                      chrome.storage.local.set({ mId }, () => {
+                        if (chrome.runtime.lastError) {
+                          return reject(chrome.runtime.lastError);
+                        }
+                        resolve(`Meeting ID set to: ${mId}`);
+                      });
+                    });
+                  };
+            
+                  (async () => {
+                    try {
+                      const result = await setMeetingId(meetingId); // Replace '12345' with your desired meeting ID
+                      console.log(result);
+                    } catch (error) {
+                      console.error("Error setting Meeting ID:", error);
+                    }
+                  })();
             }
         }, 1000);
     } else if (!meetingStartIndicator) {

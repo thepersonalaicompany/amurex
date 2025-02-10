@@ -83,41 +83,41 @@ async function fetchAINotes() {
 
     if (pltprop === "msteams") {
       // Filter duplicates and group by speaker
-      const uniqueMessages = Object.entries(result).reduce((acc, [key, value]) => {
+      const uniqueMessages = Object.entries(result.transcript).reduce((acc, [key, value]) => {
         if (key === 'transcript' && Array.isArray(value)) {
             // First remove duplicates
-            const withoutDuplicates = value.filter((item, index, array) => {
-                if (index === 0) return true;
-                const prev = array[index - 1];
-                return !(item.message === prev.message && item.speaker === prev.speaker);
-            });
+          const withoutDuplicates = value.filter((item, index, array) => {
+              if (index === 0) return true;
+              const prev = array[index - 1];
+              return !(item.message === prev.message && item.speaker === prev.speaker);
+          });
 
-            // Then group consecutive messages by speaker
-            const groupedTranscript = withoutDuplicates.reduce((grouped, current, index, array) => {
-                if (index === 0 || current.speaker !== array[index - 1].speaker) {
-                    // Start new group
-                    grouped.push({
-                        speaker: current.speaker,
-                        message: current.message,
-                        timestamp: current.timestamp
-                    });
-                } else {
-                    // Append to last group's message
-                    const lastGroup = grouped[grouped.length - 1];
-                    lastGroup.message += '. ' + current.message;
-                }
-                return grouped;
-            }, []);
+          // Then group consecutive messages by speaker
+          const groupedTranscript = withoutDuplicates.reduce((grouped, current, index, array) => {
+              if (index === 0 || current.speaker !== array[index - 1].speaker) {
+                  // Start new group
+                  grouped.push({
+                      speaker: current.speaker,
+                      message: current.message,
+                      timestamp: current.timestamp
+                  });
+              } else {
+                  // Append to last group's message
+                  const lastGroup = grouped[grouped.length - 1];
+                  lastGroup.message += '. ' + current.message;
+              }
+              return grouped;
+          }, []);
 
-            return { ...acc, [key]: groupedTranscript };
+          return { ...acc, [key]: groupedTranscript };
         }
         return { ...acc, [key]: value };
       }, {});
 
-      resultString = Object.entries(uniqueMessages).map(([key, value]) => {
-          return `<strong>${key}:</strong> ${JSON.stringify(value, null, 2)}`;
-      }).join('<br>');
-      formattedTranscript = resultString;
+      // Format the transcript in the desired style
+      formattedTranscript = Object.values(uniqueMessages).map(entry => {
+        return `${entry.speaker} (${entry.timestamp})\n${entry.message}\n`;
+      }).join('\n');
     }
 
     const body = {
@@ -125,7 +125,6 @@ async function fetchAINotes() {
       meeting_id: meetingId,
       user_id: userId,
     };
-  
 
     // Make API request
     fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/end_meeting`, {

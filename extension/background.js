@@ -341,20 +341,18 @@ function downloadTranscript() {
     ],
     async function (result) {
       if (result.userName && result.transcript && result.chatMessages) {
-        // Create file name if values or provided, use default otherwise
-        const fileName =
-          result.meetingTitle && result.meetingStartTimeStamp
-            ? `Amurex/Transcript-${result.meetingTitle} at ${result.meetingStartTimeStamp}.txt`
-            : `Amurex/Transcript.txt`;
-
-        console.log(`result dot transcript: ${result.transcript}`);
-        
         let plt = await chrome.storage.local.get("platform");
         let pltprop = plt.platform;
 
         let textContent; // Declare textContent outside the if/else blocks
+        let fileName;
 
         if (pltprop === "msteams") {
+          fileName =
+          result.meetingStartTimeStamp
+            ? `Amurex/Transcript | MS Teams meeting at ${result.meetingStartTimeStamp}.txt`
+            : `Amurex/Transcript.txt`;
+
           const uniqueMessages = Object.entries(result.transcript).reduce((acc, [key, value]) => {
             if (key === 'transcript' && Array.isArray(value)) {
                 // First remove duplicates
@@ -393,42 +391,46 @@ function downloadTranscript() {
 
           console.log("MS Teams transcript:", textContent);
         } else {
-            // Create an array to store lines of the text file
-            const lines = [];
 
-            console.log(`rizzult: ${result}`);
+          fileName =
+          result.meetingTitle && result.meetingStartTimeStamp
+            ? `Amurex/Transcript | Google Meet at ${result.meetingStartTimeStamp}.txt`
+            : `Amurex/Transcript.txt`;
 
-            // Iterate through the transcript array and format each entry
-            result.transcript.forEach((entry) => {
+          // Create an array to store lines of the text file
+          const lines = [];
+
+          // Iterate through the transcript array and format each entry
+          result.transcript.forEach((entry) => {
+            lines.push(`${entry.personName} (${entry.timeStamp})`);
+            lines.push(entry.personTranscript);
+            // Add an empty line between entries
+            lines.push("");
+          });
+          lines.push("");
+          lines.push("");
+
+          if (result.chatMessages.length > 0) {
+            // Iterate through the chat messages array and format each entry
+            lines.push("---------------");
+            lines.push("CHAT MESSAGES");
+            lines.push("---------------");
+            result.chatMessages.forEach((entry) => {
               lines.push(`${entry.personName} (${entry.timeStamp})`);
-              lines.push(entry.personTranscript);
+              lines.push(entry.chatMessageText);
               // Add an empty line between entries
               lines.push("");
             });
             lines.push("");
             lines.push("");
+          }
 
-            if (result.chatMessages.length > 0) {
-              // Iterate through the chat messages array and format each entry
-              lines.push("---------------");
-              lines.push("CHAT MESSAGES");
-              lines.push("---------------");
-              result.chatMessages.forEach((entry) => {
-                lines.push(`${entry.personName} (${entry.timeStamp})`);
-                lines.push(entry.chatMessageText);
-                // Add an empty line between entries
-                lines.push("");
-              });
-              lines.push("");
-              lines.push("");
-            }
+          // Join the lines into a single string, replace "You" with userName from storage
+          textContent = lines
+            .join("\n")
+            .replace(/You \(/g, result.userName + " (");
 
-            // Join the lines into a single string, replace "You" with userName from storage
-            textContent = lines
-              .join("\n")
-              .replace(/You \(/g, result.userName + " (");
-
-            console.log("Regular transcript:", textContent);
+          console.log("Regular transcript:", textContent);
         }
         
         // Create a blob containing the text content
