@@ -1,3 +1,8 @@
+const plt = {platform: "gmeet"};
+chrome.storage.local.set(plt);
+console.log("Google Meet platform local variable has been set");
+
+
 //*********** GLOBAL VARIABLES **********//
 const timeFormat = {
   year: "numeric",

@@ -98,7 +98,8 @@ async function fetchAINotes() {
                     // Start new group
                     grouped.push({
                         speaker: current.speaker,
-                        message: current.message
+                        message: current.message,
+                        timestamp: current.timestamp
                     });
                 } else {
                     // Append to last group's message
@@ -117,8 +118,6 @@ async function fetchAINotes() {
           return `<strong>${key}:</strong> ${JSON.stringify(value, null, 2)}`;
       }).join('<br>');
       formattedTranscript = resultString;
-    } else {
-      resultString = "asd";
     }
 
     const body = {
@@ -140,7 +139,7 @@ async function fetchAINotes() {
     .then(response => response.json())
     .then(data => {
       // Display the Notion link and meeting notes
-      summaryDiv.innerHTML = `<p>${formattedTranscript}</p>
+      summaryDiv.innerHTML = `
         <div class="notes-content">${
           data.notes_content
             ? data.notes_content

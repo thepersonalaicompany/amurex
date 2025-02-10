@@ -1,5 +1,6 @@
 const plt = {platform: "msteams"};
 chrome.storage.local.set(plt);
+console.log("MS teams platform local variable has been set");
 
 // Ensure these variables are defined globally
 let captionsActivated = false;
@@ -41,7 +42,7 @@ function checkTeamsMeetingStart() {
 
             // Convert the transcript object into a formatted string
             let transcriptString = transcript.map(entry => {
-                return `Speaker: ${entry.speaker}\nText: ${entry.message}\n---`;
+                return `Time: ${entry.timestamp}\nSpeaker: ${entry.speaker}\nText: ${entry.message}\n---`;
             }).join('\n\n');
 
             console.log("Formatted Transcript:\n" + transcriptString);
@@ -180,7 +181,11 @@ function setupObserver() {
                                     const messageText = messageElement ? messageElement.textContent.trim() : "";
 
                                     // Push the initial message to transcriptMessages
-                                    transcriptMessages.push({ speaker: speakerName, message: messageText });
+                                    transcriptMessages.push({ 
+                                        speaker: speakerName, 
+                                        message: messageText,
+                                        timestamp: new Date().toLocaleString() // Add local timestamp
+                                    });
 
                                     // Set up an observer for the message text element
                                     const messageObserver = new MutationObserver(() => {
@@ -189,7 +194,9 @@ function setupObserver() {
                                         if (updatedMessageText !== messageText) {
                                             console.log(`Updated Message: ${updatedMessageText}`);
                                             // Update the last message in the transcript array
-                                            transcriptMessages[transcriptMessages.length - 1].message = updatedMessageText;
+                                            const lastMessage = transcriptMessages[transcriptMessages.length - 1];
+                                            lastMessage.message = updatedMessageText;
+                                            // No need to update timestamp for edits
                                         }
                                     });
 
