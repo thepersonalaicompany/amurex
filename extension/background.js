@@ -345,7 +345,7 @@ function downloadTranscript() {
       "meetingStartTimeStamp",
     ],
     async function (result) {
-      if (result.userName && result.transcript && result.chatMessages) {
+      if (result.transcript) {
         let plt = await chrome.storage.local.get("platform");
         let pltprop = plt.platform;
 

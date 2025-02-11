@@ -628,6 +628,7 @@ function meetingRoutines(uiType) {
 
           // can you send a notification to user saying that we are processing the transcript?
           overWriteChromeStorage(["transcript", "chatMessages"], true);
+          chrome.storage.local.set({userName: ""});
 
           // we will need to make an API call here to save the transcript to the cloud
         });

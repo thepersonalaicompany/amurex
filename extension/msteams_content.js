@@ -2,6 +2,30 @@ const plt = {platform: "msteams"};
 chrome.storage.local.set(plt);
 console.log("MS teams platform local variable has been set");
 
+async function isAuthenticated() {
+    try {
+      // Send message to background script to check cookies
+      const response = await chrome.runtime.sendMessage({
+        action: "checkAuthentication",
+        cookies: [
+          {
+            url: "http://localhost:3000",
+            name: "amurex_session",
+          },
+          {
+            url: "https://app.amurex.ai",
+            name: "amurex_session",
+          },
+        ],
+      });
+  
+      return response.is_authenticated;
+    } catch (error) {
+      console.error("Error checking authentication:", error);
+      return false;
+    }
+  }
+
 function overWriteChromeStorage(keys, sendDownloadMessage) {
     const objectToSave = {};
     // Hard coded list of keys that are accepted
@@ -38,18 +62,166 @@ let observerInitialized = false;
 let transcriptMessages = [];
 let transcript = [];
 
+function showNotification(extensionStatusJSON) {
+    // Banner CSS
+    let html = document.querySelector("html");
+    let obj = document.createElement("div");
+    let logo = document.createElement("img");
+    let text = document.createElement("p");
+  
+    // Style the container
+    obj.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 50%;
+        transform: translateX(50%);
+        background: black;
+        padding: 20px;
+        border-radius: 8px;
+        z-index: 10000;
+        width: 400px;
+        font-family: "Host Grotesk", sans-serif;
+      `;
+  
+    // Style logo
+    logo.setAttribute(
+      "src",
+      "https://www.amurex.ai/_next/image?url=%2F_next%2Fstatic%2Fmedia%2FAmurexLogo.56901b87.png&w=64&q=75"
+    );
+    logo.setAttribute("height", "32px");
+    logo.setAttribute("width", "32px");
+    logo.style.cssText = "border-radius: 4px";
+  
+    // Style text
+    text.style.cssText = `
+        color: ${extensionStatusJSON.status === 200 ? "#fff" : "#c76dcc"};
+        margin: 10px 0;
+      `;
+    text.innerHTML = extensionStatusJSON.message;
+  
+    // Watch for the end button
+    const checkEndButton = setInterval(() => {
+      const endButtonExists = contains(
+        meetingEndIconData.selector,
+        meetingEndIconData.text
+      ).length > 0;
+  
+      if (endButtonExists) {
+        obj.style.display = "none";
+        clearInterval(checkEndButton);
+      }
+    }, 1000);
+  
+    obj.appendChild(logo);
+    obj.appendChild(text);
+    if (html) html.append(obj);
+}
+
+// Generate a UUID for the meeting ID
+const generateMeetingId = () => {
+    return 'ms-xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+};
+
+function showNotificationContextual(extensionStatusJSON) {
+    // Banner CSS
+    let html = document.querySelector("html");
+    let obj = document.createElement("div");
+    let logo = document.createElement("img");
+    let text = document.createElement("p");
+    let buttonContainer = document.createElement("div");
+    obj.style.backgroundColor = "black";
+  
+    logo.setAttribute(
+      "src",
+      "https://www.amurex.ai/_next/image?url=%2F_next%2Fstatic%2Fmedia%2FAmurexLogo.56901b87.png&w=64&q=75"
+    );
+    logo.setAttribute("height", "32px");
+    logo.setAttribute("width", "32px");
+    logo.style.cssText = "border-radius: 4px";
+  
+    // Style the button container
+    buttonContainer.style.cssText =
+      "display: flex; justify-content: center; margin-top: 10px;";
+  
+    // Create Open Panel button
+    let openPanelButton = document.createElement("button");
+    openPanelButton.textContent = "Upload Meeting Files";
+    openPanelButton.style.cssText = `
+      background: #c76dcc;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: "Host Grotesk", sans-serif;
+      font-weight: 500;
+      transition: background 0.2s;
+    `;
+  
+    openPanelButton.addEventListener("mouseover", () => {
+      openPanelButton.style.background = "#c76dcc";
+    });
+  
+    openPanelButton.addEventListener("mouseout", () => {
+      openPanelButton.style.background = "#c76dcc";
+    });
+  
+    // Add click handler
+    openPanelButton.addEventListener("click", () => {
+      const meetingId = window.location.pathname.split("/")[1].split("?")[0];
+      chrome.runtime.sendMessage({
+        type: "open_file_upload_panel",
+        meetingId: meetingId,
+      });
+      obj.remove(); // Remove notification after clicking
+    });
+  
+    // Remove banner after 5s
+    setTimeout(() => {
+      obj.style.display = "none";
+    }, 5000);
+  
+    if (extensionStatusJSON.status == 200) {
+      obj.style.cssText = `color: #2A9ACA; ${commonCSS}`;
+      text.innerHTML = extensionStatusJSON.message;
+    } else {
+      obj.style.cssText = `color: orange; ${commonCSS}`;
+      text.innerHTML = extensionStatusJSON.message;
+    }
+  
+    buttonContainer.appendChild(openPanelButton);
+    obj.prepend(buttonContainer);
+    obj.prepend(text);
+    obj.prepend(logo);
+    if (html) html.append(obj);
+}
+
 // Function to check if a Teams meeting has started
-function checkTeamsMeetingStart() {
+async function checkTeamsMeetingStart() {
+    const is_authenticated = await isAuthenticated();
+    if (!is_authenticated) {
+      showNotification({
+        status: 401,
+        message: "<strong>Please sign in to Amurex</strong> <br /> Click on the extension icon to sign in.",
+      });
+    }
+
     const meetingStartIndicator = document.querySelector("#hangup-button");
 
+    // Check if meeting is active and captions haven't been activated yet
     if (meetingStartIndicator && !captionsActivated) {
         console.log("Microsoft Teams meeting has started.");
+
+        // Set captionsActivated to true immediately to prevent double activation
+        captionsActivated = true;
 
         // Add a 1-second delay before activating captions
         setTimeout(async () => {
             await activateCaptionsInTeams();
-            captionsActivated = true; // Set the flag to true after execution
-
             console.log(`this is observerinitialized: ${observerInitialized}`);
 
             // Initialize the observer only once
@@ -59,41 +231,33 @@ function checkTeamsMeetingStart() {
                 console.log(`this is captionsactivated: ${captionsActivated}`);
                 observerInitialized = true;
 
-                // Generate a UUID for the meeting ID
-                const generateMeetingId = () => {
-                    return 'ms-xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                        const r = Math.random() * 16 | 0;
-                        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-                        return v.toString(16);
-                    });
-                };
-
                 const meetingId = generateMeetingId();
                 console.log(`Generated meeting ID: ${meetingId}`);
 
                 const setMeetingId = async (mId) => {
                     return new Promise((resolve, reject) => {
-                      chrome.storage.local.set({ mId }, () => {
-                        if (chrome.runtime.lastError) {
-                          return reject(chrome.runtime.lastError);
-                        }
-                        resolve(`Meeting ID set to: ${mId}`);
-                      });
+                        chrome.storage.local.set({ mId }, () => {
+                            if (chrome.runtime.lastError) {
+                                return reject(chrome.runtime.lastError);
+                            }
+                            resolve(`Meeting ID set to: ${mId}`);
+                        });
                     });
-                  };
+                };
             
-                  (async () => {
-                    try {
-                      const result = await setMeetingId(meetingId); // Replace '12345' with your desired meeting ID
-                      console.log(result);
-                    } catch (error) {
-                      console.error("Error setting Meeting ID:", error);
-                    }
-                  })();
+                try {
+                    const result = await setMeetingId(meetingId);
+                    console.log(result);
+                } catch (error) {
+                    console.error("Error setting Meeting ID:", error);
+                }
             }
         }, 1000);
     } else if (!meetingStartIndicator) {
-        console.log("No meeting detected.");
+        // Reset flags when meeting ends
+        captionsActivated = false;
+        observerInitialized = false;
+        
         // Save the transcript to local storage when the meeting ends
         if (transcriptMessages.length > 0) {
             localStorage.setItem('transcript', JSON.stringify(transcriptMessages));
@@ -151,6 +315,7 @@ function activateCaptionsInTeams() {
             console.log("Clicking captions button");
             captionsButton.click();
             console.log("Captions activated in Microsoft Teams");
+            hideCaptionsRenderer();
             resolve();
 
         } catch (error) {
@@ -288,6 +453,16 @@ function setupObserver() {
     }
 }
 
+// Function to add CSS to hide captions renderer
+function hideCaptionsRenderer() {
+    const style = document.createElement('style');
+    style.textContent = `
+        [data-tid="closed-caption-renderer-wrapper"] {
+            display: none !important;
+        }
+    `;
+    document.head.appendChild(style);
+}
 
 // Set an interval to check for meeting start every second
 setInterval(checkTeamsMeetingStart, 1000);
