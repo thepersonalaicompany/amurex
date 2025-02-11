@@ -1,12 +1,36 @@
+const plt = {platform: "msteams"};
+chrome.storage.local.set(plt);
+console.log("MS teams platform local variable has been set");
+
+function overWriteChromeStorage(keys, sendDownloadMessage) {
+    const objectToSave = {};
+    // Hard coded list of keys that are accepted
+    if (keys.includes("userName")) objectToSave.userName = userName;
+    if (keys.includes("transcript")) objectToSave.transcript = transcript;
+    if (keys.includes("meetingTitle")) objectToSave.meetingTitle = meetingTitle;
+    if (keys.includes("meetingStartTimeStamp"))
+      objectToSave.meetingStartTimeStamp = meetingStartTimeStamp;
+    if (keys.includes("chatMessages")) objectToSave.chatMessages = chatMessages;
+  
+    chrome.storage.local.set(objectToSave, function () {
+      console.log("Saved to chrome storage", keys);
+    });
+}
+
+const timeFormat = {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+};
+
 let meetingStartTimeStamp = new Date()
     .toLocaleString("default", timeFormat)
     .replace(/[/:]/g, "-")
     .toUpperCase();
 overWriteChromeStorage(["meetingStartTimeStamp"], false);
-
-const plt = {platform: "msteams"};
-chrome.storage.local.set(plt);
-console.log("MS teams platform local variable has been set");
 
 // Ensure these variables are defined globally
 let captionsActivated = false;
