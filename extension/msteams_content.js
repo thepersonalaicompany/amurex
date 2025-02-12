@@ -215,15 +215,105 @@ async function checkTeamsMeetingStart() {
     // Check if meeting is active and captions haven't been activated yet
     if (meetingStartIndicator && !captionsActivated) {
         console.log("Microsoft Teams meeting has started.");
-
-        // Set captionsActivated to true immediately to prevent double activation
         captionsActivated = true;
 
-        // Add a 1-second delay before activating captions
-        setTimeout(async () => {
+        try {
             await activateCaptionsInTeams();
-            console.log(`this is observerinitialized: ${observerInitialized}`);
+            
+            // First click show more button
+            const showMoreButton = document.getElementById("callingButtons-showMoreBtn");
+            if (!showMoreButton) {
+                console.log("Show more button not found");
+                return;
+            }
+            
+            console.log("Clicking show more button");
+            showMoreButton.click();
+            
+            // Then wait for and click meeting info button
+            const meetingInfoButton = await waitForElement("meeting-info-button", 5000);
+            if (!meetingInfoButton) {
+                console.log("Meeting info button not found");
+                return;
+            }
+            
+            console.log("Clicking meeting info button");
+            meetingInfoButton.click();
+            
+            // Wait for meeting info panel to appear
+            const appLayoutArea = await new Promise((resolve) => {
+                const observer = new MutationObserver((mutations, obs) => {
+                    const element = document.querySelector('[data-tid="app-layout-area--end"]');
+                    if (element) {
+                        obs.disconnect();
+                        resolve(element);
+                    }
+                });
 
+                observer.observe(document.body, {
+                    childList: true,
+                    subtree: true
+                });
+
+                // Timeout after 5 seconds
+                setTimeout(() => {
+                    observer.disconnect();
+                    resolve(null);
+                }, 5000);
+            });
+
+            if (!appLayoutArea) {
+                console.log("App layout area did not appear");
+                return;
+            }
+
+            // Wait for meeting info text to appear
+            const meetingInfoDiv = await new Promise((resolve) => {
+                const observer = new MutationObserver((mutations, obs) => {
+                    const element = appLayoutArea.querySelector('div.me-email-text');
+                    if (element) {
+                        obs.disconnect();
+                        resolve(element);
+                    }
+                });
+
+                observer.observe(appLayoutArea, {
+                    childList: true,
+                    subtree: true
+                });
+
+                // Timeout after 5 seconds
+                setTimeout(() => {
+                    observer.disconnect();
+                    resolve(null);
+                }, 5000);
+            });
+
+            if (!meetingInfoDiv) {
+                console.log("Meeting info text not found");
+                return;
+            }
+
+            // Extract meeting ID
+            const meetingIdMatch = meetingInfoDiv.textContent.match(/Meeting ID:\s*(\d+\s*\d+\s*\d+\s*\d+\s*\d+)/);
+            if (meetingIdMatch) {
+                const meetingId = meetingIdMatch[1].replace(/\s+/g, '');
+                console.log('Extracted Meeting ID:', meetingId);
+                chrome.storage.local.set({ meetingId });
+            }
+            
+            // Close the panel
+            const closeButton = await waitForElement("rail-header-close-button", 5000);
+            if (!closeButton) {
+                console.log("Close button not found");
+                return;
+            }
+            
+            console.log("Closing meeting info panel");
+            closeButton.click();
+
+            console.log(`this is observerinitialized: ${observerInitialized}`);
+            
             // Initialize the observer only once
             if (!observerInitialized) {
                 await waitForTranscriptWrapper();
@@ -252,7 +342,9 @@ async function checkTeamsMeetingStart() {
                     console.error("Error setting Meeting ID:", error);
                 }
             }
-        }, 1000);
+        } catch (error) {
+            console.error("Error during meeting start sequence:", error);
+        }
     } else if (!meetingStartIndicator) {
         // Reset flags when meeting ends
         captionsActivated = false;
