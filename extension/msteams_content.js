@@ -288,7 +288,7 @@ async function checkTeamsMeetingStart() {
             await activateCaptionsInTeams();
             
             // First click show more button
-            const showMoreButton = document.getElementById("callingButtons-showMoreBtn");
+            const showMoreButton = document.querySelector("#callingButtons-showMoreBtn")
             if (!showMoreButton) {
                 console.log("Show more button not found");
                 return;
@@ -447,10 +447,11 @@ async function checkTeamsMeetingStart() {
 function activateCaptionsInTeams() {
     return new Promise(async (resolve) => {
         try {
-            // Step 1: Click show more button and wait for menu
-            // const showMoreButton = document.getElementById("callingButtons-showMoreBtn");
-            const showMoreButton = document.querySelector("#callingButtons-showMoreBtn")
+            // Add initial delay to ensure UI is ready
+            await new Promise(resolve => setTimeout(resolve, 2000));
 
+            // Step 1: Click show more button and wait for menu
+            const showMoreButton = document.querySelector("#callingButtons-showMoreBtn")
             if (!showMoreButton) {
                 console.log("Show more button not found");
                 return resolve();
