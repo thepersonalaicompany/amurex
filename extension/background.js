@@ -64,6 +64,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   } else if (message.action === "getUserId") {
     (async () => {
       const userId = await getUserId();
+      console.log(userId);
       sendResponse({ userId });
     })();
     return true;

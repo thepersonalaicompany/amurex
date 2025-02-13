@@ -24,7 +24,75 @@ async function isAuthenticated() {
       console.error("Error checking authentication:", error);
       return false;
     }
-  }
+}
+
+function setupWebSocket(meetingId) {
+    console.log("Setting up WebSocket");
+  
+    // Get userId first, then set up WebSocket
+    chrome.runtime.sendMessage(
+      {
+        action: "getUserId",
+      },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          console.error("Error getting user id:", chrome.runtime.lastError);
+          return;
+        }
+  
+        const userId = response.userId;
+        console.log("WS User ID:", userId);
+        console.log("WS Meeting ID:", meetingId);
+  
+        // const setMeetingId = async (mId) => {
+        //   return new Promise((resolve, reject) => {
+        //     chrome.storage.local.set({ mId }, () => {
+        //       if (chrome.runtime.lastError) {
+        //         return reject(chrome.runtime.lastError);
+        //       }
+        //       resolve(`WS Meeting ID set to: ${mId}`);
+        //     });
+        //   });
+        // };
+  
+        // (async () => {
+        //   try {
+        //     const result = await setMeetingId(meetingId);
+        //     console.log(result);
+        //   } catch (error) {
+        //     console.error("Error setting Meeting ID:", error);
+        //   }
+        // })();
+  
+        // https://a8f8-162-205-132-11.ngrok-free.app
+
+        // const wsUrl = `wss://${BASE_URL_BACKEND.replace(
+        //   "https://",
+        //   ""
+        // )}/ws?meeting_id=${meetingId}&user_id=${userId}`;
+
+        const wsUrl = `wss://a8f8-162-205-132-11.ngrok-free.app/ws?meeting_id=${meetingId}&user_id=${userId}`;
+  
+        console.log("WebSocket URL:", wsUrl);
+  
+        ws = new WebSocket(wsUrl);
+  
+        ws.onopen = () => {
+          console.log("WebSocket Connected");
+        };
+  
+        ws.onclose = () => {
+          console.log("WebSocket Disconnected");
+          // Attempt to reconnect after 5 seconds
+          setTimeout(setupWebSocket, 5000);
+        };
+  
+        ws.onerror = (error) => {
+          console.error("WebSocket Error:", error);
+        };
+      }
+    );
+}
 
 function overWriteChromeStorage(keys, sendDownloadMessage) {
     const objectToSave = {};
@@ -296,9 +364,11 @@ async function checkTeamsMeetingStart() {
 
             // Extract meeting ID
             const meetingIdMatch = meetingInfoDiv.textContent.match(/Meeting ID:\s*(\d+\s*\d+\s*\d+\s*\d+\s*\d+)/);
+            let meetingIdObj;
             if (meetingIdMatch) {
                 const meetingId = meetingIdMatch[1].replace(/\s+/g, '');
                 console.log('Extracted Meeting ID:', meetingId);
+                meetingIdObj = meetingId;
                 chrome.storage.local.set({ meetingId });
             }
             
@@ -311,6 +381,9 @@ async function checkTeamsMeetingStart() {
             
             console.log("Closing meeting info panel");
             closeButton.click();
+
+            // setting up websocket to create a new late_meeting record in supabase
+            setupWebSocket(meetingIdObj);
 
             console.log(`this is observerinitialized: ${observerInitialized}`);
             
