@@ -3,6 +3,14 @@ document.addEventListener("DOMContentLoaded", () => {
   setupCookieListener(updateUI);
   setupQAObserver();
 
+  // Get the sections
+  const liveSuggestionsSection = document.getElementById("live-suggestions");
+  const uploadContextSection = document.getElementById("upload-context-files");
+
+  // Initially hide live suggestions and show upload context
+  liveSuggestionsSection.style.display = "none";
+  uploadContextSection.style.display = "block";
+
   const fileInput = document.getElementById("file-input");
   const uploadStatus = document.getElementById("upload-status");
 
@@ -32,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
         `${AMUREX_CONFIG.BASE_URL_BACKEND}/upload_meeting_file/${meetingId}/${user_id}`,
         {
           method: "POST",
-          body: formData, // FormData automatically sets the correct multipart/form-data content-type
+          body: formData,
         }
       );
 
@@ -44,10 +52,14 @@ document.addEventListener("DOMContentLoaded", () => {
       chrome.storage.local.set({ isFileUploaded: true });
       uploadStatus.innerHTML = `<div style="color: #4CAF50;">Upload successful!</div>`;
       
+      // Toggle sections after successful upload
+      setTimeout(() => {
+        uploadContextSection.style.display = "none";
+        liveSuggestionsSection.style.display = "block";
+      }, 1000); // Wait 1 second before switching views
+      
     } catch (error) {
       uploadStatus.innerHTML = `<div style="color: #f44336;">Upload failed: ${error.message}</div>`;
-    } finally {
-      // window.close();
     }
   });
 
