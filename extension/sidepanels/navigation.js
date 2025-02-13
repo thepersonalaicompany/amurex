@@ -9,15 +9,10 @@ async function checkNavItem() {
 
     if (value === "open_file_upload_panel") {
       if (meetingId) {
+        // TODO: add the chat sidepanel to the file upload
         window.location.href = `file_upload_panel.html?meetingId=${meetingId}`;
       } else {
         window.location.href = "file_upload_panel.html";
-      }
-    } else if (value === "open_late_meeting_side_panel") {
-      if (meetingId) {
-        window.location.href = `lateMeetingSidePanel.html?meetingId=${meetingId}`;
-      } else {
-        window.location.href = "lateMeetingSidePanel.html";
       }
     } else if (value === "chatsidepanel") {
       window.location.href = "chatsidepanel.html";

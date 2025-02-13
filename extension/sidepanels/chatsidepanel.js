@@ -3,6 +3,54 @@ document.addEventListener("DOMContentLoaded", () => {
   setupCookieListener(updateUI);
   setupQAObserver();
 
+  const fileInput = document.getElementById("file-input");
+  const uploadStatus = document.getElementById("upload-status");
+
+  fileInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Create FormData with the expected format
+    const formData = new FormData();
+    formData.append("file", file, file.name);
+
+    // Show upload starting
+    uploadStatus.innerHTML = `
+      <div>Uploading ${file.name}...</div>
+      <div class="upload-progress">
+        <div class="upload-progress-bar" style="width: 0%"></div>
+      </div>
+    `;
+
+    const meetingId = document.location.href.split("meetingId=")[1];
+    const session = await getSession();
+    const parsedSession = JSON.parse(decodeURIComponent(session));
+    const user_id = parsedSession.user.id;
+
+    try {
+      const response = await fetch(
+        `${AMUREX_CONFIG.BASE_URL_BACKEND}/upload_meeting_file/${meetingId}/${user_id}`,
+        {
+          method: "POST",
+          body: formData, // FormData automatically sets the correct multipart/form-data content-type
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      chrome.storage.local.set({ isFileUploaded: true });
+      uploadStatus.innerHTML = `<div style="color: #4CAF50;">Upload successful!</div>`;
+      
+    } catch (error) {
+      uploadStatus.innerHTML = `<div style="color: #f44336;">Upload failed: ${error.message}</div>`;
+    } finally {
+      // window.close();
+    }
+  });
+
   document.getElementById("close-btn").addEventListener("click", async () => {
     // Track closing sidebar only if analytics is enabled
     if (AMUREX_CONFIG.ANALYTICS_ENABLED) {
@@ -106,7 +154,7 @@ function updateQADisplay() {
     const summaryDiv = document.getElementById("meeting-summary");
     
     if (qaHistory.length === 0) {
-      summaryDiv.innerHTML = '<div class="loading-placeholder">No questions generated yet.  <a href="file_upload_panel.html" class="upload-button" style="color: #9334E9; text-decoration: none; font-weight: 500;">Upload context files</a> to get started.</div>';
+      summaryDiv.innerHTML = '<div class="loading-placeholder">No questions generated yet. </div>';
       return;
     }
 
