@@ -448,7 +448,9 @@ function activateCaptionsInTeams() {
     return new Promise(async (resolve) => {
         try {
             // Step 1: Click show more button and wait for menu
-            const showMoreButton = document.getElementById("callingButtons-showMoreBtn");
+            // const showMoreButton = document.getElementById("callingButtons-showMoreBtn");
+            const showMoreButton = document.querySelector("#callingButtons-showMoreBtn")
+
             if (!showMoreButton) {
                 console.log("Show more button not found");
                 return resolve();
