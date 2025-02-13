@@ -164,6 +164,11 @@
   margin: 0;
 }
 
+.section {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
 .upload-status {
   margin-top: 16px;
   text-align: center;
