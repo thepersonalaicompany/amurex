@@ -84,7 +84,6 @@ function setupWebSocket(meetingId) {
         ws.onclose = () => {
           console.log("WebSocket Disconnected");
           // Attempt to reconnect after 5 seconds
-          setTimeout(setupWebSocket, 5000);
         };
   
         ws.onerror = (error) => {
@@ -364,12 +363,41 @@ async function checkTeamsMeetingStart() {
 
             // Extract meeting ID
             const meetingIdMatch = meetingInfoDiv.textContent.match(/Meeting ID:\s*(\d+\s*\d+\s*\d+\s*\d+\s*\d+)/);
-            let meetingIdObj;
             if (meetingIdMatch) {
                 const meetingId = meetingIdMatch[1].replace(/\s+/g, '');
                 console.log('Extracted Meeting ID:', meetingId);
-                meetingIdObj = meetingId;
                 chrome.storage.local.set({ meetingId });
+                
+                // Set up websocket with the extracted meetingId directly
+                setupWebSocket(meetingId);
+
+                console.log(`this is observerinitialized: ${observerInitialized}`);
+                
+                // Initialize the observer only once
+                if (!observerInitialized) {
+                    await waitForTranscriptWrapper();
+                    setupObserver();
+                    console.log(`this is captionsactivated: ${captionsActivated}`);
+                    observerInitialized = true;
+
+                    const setMeetingId = async (mId) => {
+                        return new Promise((resolve, reject) => {
+                            chrome.storage.local.set({ mId }, () => {
+                                if (chrome.runtime.lastError) {
+                                    return reject(chrome.runtime.lastError);
+                                }
+                                resolve(`Meeting ID set to: ${mId}`);
+                            });
+                        });
+                    };
+                
+                    try {
+                        const result = await setMeetingId(meetingId);
+                        console.log(result);
+                    } catch (error) {
+                        console.error("Error setting Meeting ID:", error);
+                    }
+                }
             }
             
             // Close the panel
@@ -383,38 +411,7 @@ async function checkTeamsMeetingStart() {
             closeButton.click();
 
             // setting up websocket to create a new late_meeting record in supabase
-            setupWebSocket(meetingIdObj);
-
-            console.log(`this is observerinitialized: ${observerInitialized}`);
-            
-            // Initialize the observer only once
-            if (!observerInitialized) {
-                await waitForTranscriptWrapper();
-                setupObserver();
-                console.log(`this is captionsactivated: ${captionsActivated}`);
-                observerInitialized = true;
-
-                const meetingId = generateMeetingId();
-                console.log(`Generated meeting ID: ${meetingId}`);
-
-                const setMeetingId = async (mId) => {
-                    return new Promise((resolve, reject) => {
-                        chrome.storage.local.set({ mId }, () => {
-                            if (chrome.runtime.lastError) {
-                                return reject(chrome.runtime.lastError);
-                            }
-                            resolve(`Meeting ID set to: ${mId}`);
-                        });
-                    });
-                };
-            
-                try {
-                    const result = await setMeetingId(meetingId);
-                    console.log(result);
-                } catch (error) {
-                    console.error("Error setting Meeting ID:", error);
-                }
-            }
+            await waitForMeetingId(window);
         } catch (error) {
             console.error("Error during meeting start sequence:", error);
         }
@@ -631,3 +628,19 @@ function hideCaptionsRenderer() {
 
 // Set an interval to check for meeting start every second
 setInterval(checkTeamsMeetingStart, 1000);
+
+function waitForMeetingId(context) {
+    return new Promise((resolve) => {
+        if (context.meetingIdObj) {
+            resolve();
+            return;
+        }
+        
+        const checkInterval = setInterval(() => {
+            if (context.meetingIdObj) {
+                clearInterval(checkInterval);
+                resolve();
+            }
+        }, 100);
+    });
+}
