@@ -96,12 +96,11 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   } 
     else if (
     message.type === "open_side_panel" ||
-    message.type === "open_late_meeting_side_panel" ||
     message.type === "open_file_upload_panel"
   ) {
     const pathMap = {
       open_side_panel: "sidepanels/sidepanel.html",
-      open_file_upload_panel: `sidepanels/file_upload_panel.html${
+      open_file_upload_panel: `sidepanels/chatsidepanel.html${
         message.meetingId ? `?meetingId=${message.meetingId}` : ""
       }`,
     };
@@ -128,7 +127,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     // Set the navigation item
     let navItem;
     if (message.type === "open_file_upload_panel") {
-      navItem = "file_upload_panel";
+      navItem = "chatsidepanel";
     } else if (message.type === "open_side_panel") {
       // Make tracking request with valid userId
       (async () => {

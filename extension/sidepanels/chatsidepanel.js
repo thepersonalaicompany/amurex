@@ -3,6 +3,66 @@ document.addEventListener("DOMContentLoaded", () => {
   setupCookieListener(updateUI);
   setupQAObserver();
 
+  // Get the sections
+  const liveSuggestionsSection = document.getElementById("live-suggestions");
+  const uploadContextSection = document.getElementById("upload-context-files");
+
+  // Initially hide live suggestions and show upload context
+  liveSuggestionsSection.style.display = "none";
+  uploadContextSection.style.display = "block";
+
+  const fileInput = document.getElementById("file-input");
+  const uploadStatus = document.getElementById("upload-status");
+
+  fileInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Create FormData with the expected format
+    const formData = new FormData();
+    formData.append("file", file, file.name);
+
+    // Show upload starting
+    uploadStatus.innerHTML = `
+      <div>Uploading ${file.name}...</div>
+      <div class="upload-progress">
+        <div class="upload-progress-bar" style="width: 0%"></div>
+      </div>
+    `;
+
+    const meetingId = await chrome.storage.local.get('mId');
+    const session = await getSession();
+    const parsedSession = JSON.parse(decodeURIComponent(session));
+    const user_id = parsedSession.user.id;
+
+    try {
+      const response = await fetch(
+        `${AMUREX_CONFIG.BASE_URL_BACKEND}/upload_meeting_file/${meetingId.mId}/${user_id}`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      chrome.storage.local.set({ isFileUploaded: true });
+      uploadStatus.innerHTML = `<div style="color: #4CAF50;">Upload successful!</div>`;
+      
+      // Toggle sections after successful upload
+      setTimeout(() => {
+        uploadContextSection.style.display = "none";
+        liveSuggestionsSection.style.display = "block";
+      }, 1000); // Wait 1 second before switching views
+      
+    } catch (error) {
+      uploadStatus.innerHTML = `<div style="color: #f44336;">Upload failed: ${error.message}</div>`;
+    }
+  });
+
   document.getElementById("close-btn").addEventListener("click", async () => {
     // Track closing sidebar only if analytics is enabled
     if (AMUREX_CONFIG.ANALYTICS_ENABLED) {
@@ -20,9 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   
       const userId = userIdResponse.userId;
-      const meetingId = window.location.href.includes('meetingId=') ? 
-      window.location.href.split('meetingId=')[1].split('&')[0] : 
-      'unknown';
+      const meetingId = await chrome.storage.local.get('mId');
 
       await fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/track`, {
         method: "POST", 
@@ -32,7 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         body: JSON.stringify({
           uuid: userId,
-          meeting_id: meetingId,
+          meeting_id: meetingId.mId,
           event_type: "close_sidebar",
         }),
       });
@@ -42,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Add Previous Transcripts button functionality
-  document.getElementById("previous-transcripts").addEventListener("click", () => {
+  document.getElementById("previous-transcripts").addEventListener("click", async  () => {
     // Open app.amurex.ai in a new tab
     chrome.tabs.create({
       url: `${AMUREX_CONFIG.BASE_URL_WEB}/meetings`,
@@ -50,10 +108,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Get meetingId from URL if available
-    const meetingId = window.location.href.includes('meetingId=') ? 
-      window.location.href.split('meetingId=')[1].split('&')[0] : 
-      'unknown';
-
+    const meetingId = await chrome.storage.local.get('mId');
+    console.log("Meeting ID:", meetingId);
     // Track the event if analytics is enabled
     chrome.runtime.sendMessage(
       {
@@ -76,7 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             body: JSON.stringify({ 
               uuid: userId, 
-              meeting_id: meetingId, 
+              meeting_id: meetingId.mId, 
               event_type: "view_previous_transcripts" 
             }),
           }).catch(error => {
@@ -106,7 +162,7 @@ function updateQADisplay() {
     const summaryDiv = document.getElementById("meeting-summary");
     
     if (qaHistory.length === 0) {
-      summaryDiv.innerHTML = '<div class="loading-placeholder">No questions generated yet.  <a href="file_upload_panel.html" class="upload-button" style="color: #9334E9; text-decoration: none; font-weight: 500;">Upload context files</a> to get started.</div>';
+      summaryDiv.innerHTML = '<div class="loading-placeholder">No questions generated yet. </div>';
       return;
     }
 

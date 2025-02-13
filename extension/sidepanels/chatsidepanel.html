@@ -8,6 +8,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
+    <!-- <link rel="stylesheet" href="file_upload_panel.css" /> -->
   </head>
   <body>
     <div id="auth-container" class="auth-container">
@@ -117,7 +118,7 @@
       </header>
 
       <div class="content-wrapper">
-        <div class="section">
+        <div class="section" id="live-suggestions">
           <h2 style="color: #fafafa; padding-left: 12px; padding-right: 12px">
             Live Suggestions
           </h2>
@@ -128,7 +129,60 @@
             </div>
           </div>
         </div>
+        <div class="section" id="upload-context-files">
+          <h2 class="upload-heading">Upload meeting context files</h2>
+          <p class="upload-paragraph">
+            Want to get the best out of Amurex's real-time suggestions? Just
+            upload a file related to your meeting.
+          </p>
+          <h3 class="upload-ideas-heading">Some ideas:</h3>
+          <ul class="upload-list">
+            <li>Pitch or Sales Deck</li>
+            <li>Interview Questions</li>
+            <li>Cheat Sheet</li>
+          </ul>
+          <div class="card">
+            <div class="upload-container">
+              <input
+                type="file"
+                id="file-input"
+                accept=".pdf"
+                class="file-input"
+              />
+              <label for="file-input" class="upload-button">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 16V8M12 8L9 11M12 8L15 11"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M3 15V16C3 18.2091 4.79086 20 7 20H17C19.2091 20 21 18.2091 21 16V15"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                Choose context file
+              </label>
+              <p class="upload-hint">Supported formats: PDF</p>
+            </div>
+            <div id="upload-status" class="upload-status"></div>
+          </div>
+        </div>
+
       </div>
+
+
+
       <nav class="bottom-nav">
         <a href="sidepanel.html" class="nav-item">
           <svg
@@ -158,27 +212,6 @@
             />
           </svg>
           <span class="nav-label">Live Suggestions</span>
-        </a>
-        <a href="file_upload_panel.html" class="nav-item">
-          <svg
-            class="nav-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-          >
-            <path
-              d="M12 16V8M12 8L9 11M12 8L15 11"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M3 15V16C3 18.2091 4.79086 20 7 20H17C19.2091 20 21 18.2091 21 16V15"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-          </svg>
-          <span class="nav-label">Upload</span>
         </a>
       </nav>
     </div>
