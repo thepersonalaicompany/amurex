@@ -137,14 +137,27 @@ async function fetchAINotes() {
                 .trim()
                 .split("\n")
                 .filter((line) => line.trim() !== "")
-                .map((line) =>
-                  line.startsWith("- ")
-                    ? `<li>${line.substring(2)}</li>` // Handle list items
-                    : line // Keep other lines as is
-                        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                        .replace(/\*(.*?)\*/g, "<em>$1</em>")
-                        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
-                )
+                .map((line) => {
+                  // Skip lines containing "Meeting Notes"
+                  if (line.includes("Meeting Notes")) {
+                    return "";
+                  }
+                  // Handle headers and list items
+                  if (line.startsWith('### ')) {
+                    return `<h4>${line.substring(4)}</h4>`;
+                  } else if (line.startsWith('## ')) {
+                    return `<h3>${line.substring(3)}</h3>`;
+                  } else if (line.startsWith('# ')) {
+                    return `<h2>${line.substring(2)}</h2>`;
+                  } else if (line.startsWith('- ') || line.startsWith('* ') || line.startsWith(' -')) {
+                    return `<li>${line.substring(2)}</li>`; // Handle list items
+                  } else {
+                    return line // Keep other lines as is
+                      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                      .replace(/\*(.*?)\*/g, "<em>$1</em>")
+                      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
+                  }
+                })
                 .join("\n") // Restore newlines
                 .replace(
                   /(<li>.*?<\/li>)\n?(<li>.*?<\/li>)+/g,
