@@ -112,8 +112,6 @@ async function fetchAINotes() {
     console.log(`Meeting ID retrieved: ${meetingId}`);
     console.log(`User ID retrieved: ${userId}`);
     
-<<<<<<< HEAD
-=======
     let resultString = "";
     let plt = await chrome.storage.local.get("platform");
     let pltprop = plt.platform;
@@ -157,7 +155,6 @@ async function fetchAINotes() {
       }).join('\n');
     }
 
->>>>>>> draft-msteams
     const body = {
       transcript: formattedTranscript,
       meeting_id: meetingId,

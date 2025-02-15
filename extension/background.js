@@ -64,6 +64,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   } else if (message.action === "getUserId") {
     (async () => {
       const userId = await getUserId();
+      console.log(userId);
       sendResponse({ userId });
     })();
     return true;
@@ -158,14 +159,46 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     chrome.storage.local.set({ navItem });
   } else if (message.type === "fetch_late_summary") {
     console.log("Fetching late summary");
+    console.log(message);
     fetchLateSummary(message.meetingId)
-      .then(data => { 
+      .then(data => {
         console.log("Late summary fetched");
         console.log(data);
         
         sendResponse({ success: true, data }); })
       .catch(error => sendResponse({ success: false, error: error.message }));
     return true; // Required for async response
+  } else if (message.type === 'check_meeting_status') {
+    const checkUrl = `${message.baseUrl}/check_meeting/${message.meetingId}`;
+    
+    // First try without the header
+    fetch(checkUrl, {
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
+      .then(response => response.json())
+      .catch(() => {
+        // If first attempt fails, try with the ngrok header
+        return fetch(checkUrl, {
+          headers: {
+            'Accept': 'application/json',
+          }
+        }).then(response => response.json());
+      })
+      .then(data => {
+        sendResponse(data);
+      })
+      .catch(error => {
+        console.error("Error checking meeting status:", error);
+        // Fallback response
+        sendResponse({ 
+          is_meeting: true,
+          error: error.message 
+        });
+      });
+      
+    return true; // Required to use sendResponse asynchronously
   }
 });
 
@@ -282,11 +315,7 @@ async function injectNotification() {
   let yesButton = document.createElement("button");
   yesButton.textContent = "Yes";
   yesButton.style.cssText = `
-<<<<<<< HEAD
     background: #c76dcc;
-=======
-    background: rgb(209, 173, 211);
->>>>>>> draft-msteams
     color: white;
     border: none;
     padding: 5px 15px;
@@ -302,13 +331,8 @@ async function injectNotification() {
   noButton.textContent = "No";
   noButton.style.cssText = `
     background: transparent;
-<<<<<<< HEAD
     color: #c76dcc;
     border: 1px solid #c76dcc;
-=======
-    color: rgb(209, 173, 211);
-    border: 1px solid rgb(209, 173, 211);
->>>>>>> draft-msteams
     padding: 5px 15px;
     border-radius: 4px;
     cursor: pointer;
@@ -354,7 +378,7 @@ function downloadTranscript() {
       "meetingStartTimeStamp",
     ],
     async function (result) {
-      if (result.userName && result.transcript && result.chatMessages) {
+      if (result.transcript) {
         let plt = await chrome.storage.local.get("platform");
         let pltprop = plt.platform;
 
@@ -495,18 +519,33 @@ chrome.action.onClicked.addListener(async (tab) => {
   chrome.sidePanel.open({ tabId: tab.id });
 });
 
-<<<<<<< HEAD
 async function fetchLateSummary(meetingId) {
   try {
+    console.log(`meetingId: ${meetingId}`);
+    console.log(meetingId);
+    
     const response = await fetch(
-      `${AMUREX_CONFIG.BASE_URL_BACKEND}/late_summary/${meetingId}`
+      // `https://ee612ac415f9.ngrok.app/late_summary/${meetingId}`,
+      `https://api.amurex.ai/late_summary/${meetingId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
     );
 
+    // Log the response status and text for debugging
+    console.log("Response status:", response.status);
+    const text = await response.text(); // Read the response as text
+    console.log("Response text:", text); // Log the response text
+
     if (!response.ok) {
-      throw new Error(`Server responded with ${response.status}`);
+      throw new Error(`Server responded with ${response.status}: ${text}`);
     }
 
-    const data = await response.json();
+    // Attempt to parse the response as JSON
+    const data = JSON.parse(text);
     return data;
   } catch (error) {
     console.error('Error fetching late meeting summary:', error);
@@ -514,5 +553,3 @@ async function fetchLateSummary(meetingId) {
   }
 }
 
-=======
->>>>>>> draft-msteams
