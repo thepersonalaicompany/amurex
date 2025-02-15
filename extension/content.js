@@ -1,3 +1,8 @@
+const plt = {platform: "gmeet"};
+chrome.storage.local.set(plt);
+console.log("Google Meet platform local variable has been set");
+
+
 //*********** GLOBAL VARIABLES **********//
 const timeFormat = {
   year: "numeric",
@@ -623,6 +628,7 @@ function meetingRoutines(uiType) {
 
           // can you send a notification to user saying that we are processing the transcript?
           overWriteChromeStorage(["transcript", "chatMessages"], true);
+          chrome.storage.local.set({userName: ""});
 
           // we will need to make an API call here to save the transcript to the cloud
         });
@@ -637,7 +643,7 @@ function meetingRoutines(uiType) {
 // Returns all elements of the specified selector type and specified textContent. Return array contains the actual element as well as all the upper parents.
 function contains(selector, text) {
   const elements = document.querySelectorAll(selector);
-  return Array.prototype.filter.call(elements, (element) => {
+  return Array.prototype.filter.call(elements, element => {
     return RegExp(text).test(element.textContent);
   });
 }
@@ -702,8 +708,10 @@ function showNotification(extensionStatusJSON) {
 
   // Watch for the end button
   const checkEndButton = setInterval(() => {
-    const endButtonExists =
-      contains(meetingEndIconData.selector, meetingEndIconData.text).length > 0;
+    const endButtonExists = contains(
+      meetingEndIconData.selector,
+      meetingEndIconData.text
+    ).length > 0;
 
     if (endButtonExists) {
       obj.style.display = "none";
@@ -753,7 +761,7 @@ function showNotificationLive() {
     color: #fff;
     margin: 10px 0;
   `;
-  text.innerHTML = "Meeting started. Would you like to see the meeting recap?";
+  text.innerHTML = "Meeting ended. Would you like to see the summary and action items?";
 
   // Style button container
   buttonContainer.style.cssText = "display: flex; gap: 10px; margin-top: 10px;";
@@ -799,8 +807,10 @@ function showNotificationLive() {
 
   // Watch for the end button
   const checkEndButton = setInterval(() => {
-    const endButtonExists =
-      contains(meetingEndIconData.selector, meetingEndIconData.text).length > 0;
+    const endButtonExists = contains(
+      meetingEndIconData.selector,
+      meetingEndIconData.text
+    ).length > 0;
 
     if (endButtonExists) {
       obj.style.display = "none";
@@ -1112,8 +1122,8 @@ function updateMeetingTitle() {
 
 // Add this function at the top level of your content.js
 function createAnimatedPanel(meetingId) {
-  const existingNotification = document.getElementById("live-notification");
-
+  const existingNotification = document.getElementById('live-notification');
+  
   if (existingNotification) {
     // Update the content with a more spacious layout
     existingNotification.innerHTML = `
@@ -1177,17 +1187,16 @@ function createAnimatedPanel(meetingId) {
     `;
 
     // Add click handler for close button
-    existingNotification
-      .querySelector(".close-btn")
-      .addEventListener("click", () => {
-        existingNotification.remove();
-      });
+    existingNotification.querySelector('.close-btn').addEventListener('click', () => {
+      existingNotification.remove();
+    });
 
     // Watch for the end button
     const checkEndButton = setInterval(() => {
-      const endButtonExists =
-        contains(meetingEndIconData.selector, meetingEndIconData.text).length >
-        0;
+      const endButtonExists = contains(
+        meetingEndIconData.selector,
+        meetingEndIconData.text
+      ).length > 0;
 
       if (endButtonExists) {
         existingNotification.remove();
@@ -1196,13 +1205,12 @@ function createAnimatedPanel(meetingId) {
     }, 1000);
 
     // Get summary preview element and fetch data
-    const summaryPreview =
-      existingNotification.querySelector(".summary-preview");
-
+    const summaryPreview = existingNotification.querySelector('.summary-preview');
+    
     // Fetch summary through background script
     chrome.runtime.sendMessage(
       { type: "fetch_late_summary", meetingId },
-      function (response) {
+      function(response) {
         if (response.success && response.data) {
           const data = response.data;
           summaryPreview.innerHTML = `
@@ -1214,40 +1222,25 @@ function createAnimatedPanel(meetingId) {
                     .filter((line) => line.trim() !== "")
                     .map((line) => {
                       // Handle headings first
-                      if (line.startsWith("### ")) {
-                        return `<h3 style="color: #fff; font-size: 16px; margin: 16px 0 8px 0;">${line.substring(
-                          4
-                        )}</h3>`;
-                      } else if (line.startsWith("## ")) {
-                        return `<h2 style="color: #fff; font-size: 18px; margin: 20px 0 10px 0;">${line.substring(
-                          3
-                        )}</h2>`;
-                      } else if (line.startsWith("# ")) {
-                        return `<h1 style="color: #fff; font-size: 20px; margin: 24px 0 12px 0;">${line.substring(
-                          2
-                        )}</h1>`;
-                      } else if (line.startsWith("- ")) {
-                        return `<li style="margin-bottom: 8px;">${line.substring(
-                          2
-                        )}</li>`;
+                      if (line.startsWith('### ')) {
+                        return `<h3 style="color: #fff; font-size: 16px; margin: 16px 0 8px 0;">${line.substring(4)}</h3>`;
+                      } else if (line.startsWith('## ')) {
+                        return `<h2 style="color: #fff; font-size: 18px; margin: 20px 0 10px 0;">${line.substring(3)}</h2>`;
+                      } else if (line.startsWith('# ')) {
+                        return `<h1 style="color: #fff; font-size: 20px; margin: 24px 0 12px 0;">${line.substring(2)}</h1>`;
+                      } else if (line.startsWith('- ')) {
+                        return `<li style="margin-bottom: 8px;">${line.substring(2)}</li>`;
                       } else {
                         return line
-                          .replace(
-                            /\*\*(.*?)\*\*/g,
-                            "<strong style='color: #c76dcc'>$1</strong>"
-                          )
+                          .replace(/\*\*(.*?)\*\*/g, "<strong style='color: #c76dcc'>$1</strong>")
                           .replace(/\*(.*?)\*/g, "<em>$1</em>")
-                          .replace(
-                            /\[(.*?)\]\((.*?)\)/g,
-                            '<a href="$2" style="color: #c76dcc; text-decoration: none;">$1</a>'
-                          );
+                          .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" style="color: #c76dcc; text-decoration: none;">$1</a>');
                       }
                     })
                     .join("\n")
                     .replace(
                       /(<li>.*?<\/li>)\n?(<li>.*?<\/li>)+/g,
-                      (list) =>
-                        `<ul style="list-style-type: none; padding-left: 0;">${list}</ul>`
+                      (list) => `<ul style="list-style-type: none; padding-left: 0;">${list}</ul>`
                     )
                     .replace(/\n/g, "<br>")
                 : "No meeting notes available yet."

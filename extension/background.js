@@ -64,6 +64,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   } else if (message.action === "getUserId") {
     (async () => {
       const userId = await getUserId();
+      console.log(userId);
       sendResponse({ userId });
     })();
     return true;
@@ -96,11 +97,12 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   } 
     else if (
     message.type === "open_side_panel" ||
+    message.type === "open_late_meeting_side_panel" ||
     message.type === "open_file_upload_panel"
   ) {
     const pathMap = {
       open_side_panel: "sidepanels/sidepanel.html",
-      open_file_upload_panel: `sidepanels/chatsidepanel.html${
+      open_file_upload_panel: `sidepanels/file_upload_panel.html${
         message.meetingId ? `?meetingId=${message.meetingId}` : ""
       }`,
     };
@@ -127,7 +129,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     // Set the navigation item
     let navItem;
     if (message.type === "open_file_upload_panel") {
-      navItem = "chatsidepanel";
+      navItem = "file_upload_panel";
     } else if (message.type === "open_side_panel") {
       // Make tracking request with valid userId
       (async () => {
@@ -157,6 +159,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     chrome.storage.local.set({ navItem });
   } else if (message.type === "fetch_late_summary") {
     console.log("Fetching late summary");
+    console.log(message);
     fetchLateSummary(message.meetingId)
       .then(data => { 
         console.log("Late summary fetched");
@@ -165,6 +168,37 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         sendResponse({ success: true, data }); })
       .catch(error => sendResponse({ success: false, error: error.message }));
     return true; // Required for async response
+  } else if (message.type === 'check_meeting_status') {
+    const checkUrl = `${message.baseUrl}/check_meeting/${message.meetingId}`;
+    
+    // First try without the header
+    fetch(checkUrl, {
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
+      .then(response => response.json())
+      .catch(() => {
+        // If first attempt fails, try with the ngrok header
+        return fetch(checkUrl, {
+          headers: {
+            'Accept': 'application/json',
+          }
+        }).then(response => response.json());
+      })
+      .then(data => {
+        sendResponse(data);
+      })
+      .catch(error => {
+        console.error("Error checking meeting status:", error);
+        // Fallback response
+        sendResponse({ 
+          is_meeting: true,
+          error: error.message 
+        });
+      });
+      
+    return true; // Required to use sendResponse asynchronously
   }
 });
 
@@ -343,55 +377,103 @@ function downloadTranscript() {
       "meetingTitle",
       "meetingStartTimeStamp",
     ],
-    function (result) {
-      if (result.userName && result.transcript && result.chatMessages) {
-        // Create file name if values or provided, use default otherwise
-        const fileName =
-          result.meetingTitle && result.meetingStartTimeStamp
-            ? `Amurex/Transcript-${result.meetingTitle} at ${result.meetingStartTimeStamp}.txt`
+    async function (result) {
+      if (result.transcript) {
+        let plt = await chrome.storage.local.get("platform");
+        let pltprop = plt.platform;
+
+        let textContent; // Declare textContent outside the if/else blocks
+        let fileName;
+
+        if (pltprop === "msteams") {
+          fileName =
+          result.meetingStartTimeStamp
+            ? `Amurex/Transcript | MS Teams meeting at ${result.meetingStartTimeStamp}.txt`
             : `Amurex/Transcript.txt`;
 
-        const transcriptString = JSON.stringify(result.transcript, null, 2);
-        console.log(`THIS IS THE TRANSCRIPT BEFORE SAVING TO TXT: ${transcriptString}`);
-        
-            // Create an array to store lines of the text file
-        const lines = [];
+          const uniqueMessages = Object.entries(result.transcript).reduce((acc, [key, value]) => {
+            if (key === 'transcript' && Array.isArray(value)) {
+                // First remove duplicates
+              const withoutDuplicates = value.filter((item, index, array) => {
+                  if (index === 0) return true;
+                  const prev = array[index - 1];
+                  return !(item.message === prev.message && item.speaker === prev.speaker);
+              });
 
-        // Iterate through the transcript array and format each entry
-        result.transcript.forEach((entry) => {
-          lines.push(`${entry.personName} (${entry.timeStamp})`);
-          lines.push(entry.personTranscript);
-          // Add an empty line between entries
-          lines.push("");
-        });
-        lines.push("");
-        lines.push("");
+              // Then group consecutive messages by speaker
+              const groupedTranscript = withoutDuplicates.reduce((grouped, current, index, array) => {
+                  if (index === 0 || current.speaker !== array[index - 1].speaker) {
+                      // Start new group
+                      grouped.push({
+                          speaker: current.speaker,
+                          message: current.message,
+                          timestamp: current.timestamp
+                      });
+                  } else {
+                      // Append to last group's message
+                      const lastGroup = grouped[grouped.length - 1];
+                      lastGroup.message += '. ' + current.message;
+                  }
+                  return grouped;
+              }, []);
 
-        if (result.chatMessages.length > 0) {
-          // Iterate through the chat messages array and format each entry
-          lines.push("---------------");
-          lines.push("CHAT MESSAGES");
-          lines.push("---------------");
-          result.chatMessages.forEach((entry) => {
+              return { ...acc, [key]: groupedTranscript };
+            }
+            return { ...acc, [key]: value };
+          }, {});
+
+          // Format the transcript in the desired style
+          textContent = Object.values(uniqueMessages).map(entry => {
+            return `${entry.speaker} (${entry.timestamp})\n${entry.message}\n`;
+          }).join('\n');
+
+          console.log("MS Teams transcript:", textContent);
+        } else {
+
+          fileName =
+          result.meetingTitle && result.meetingStartTimeStamp
+            ? `Amurex/Transcript | Google Meet at ${result.meetingStartTimeStamp}.txt`
+            : `Amurex/Transcript.txt`;
+
+          // Create an array to store lines of the text file
+          const lines = [];
+
+          // Iterate through the transcript array and format each entry
+          result.transcript.forEach((entry) => {
             lines.push(`${entry.personName} (${entry.timeStamp})`);
-            lines.push(entry.chatMessageText);
+            lines.push(entry.personTranscript);
             // Add an empty line between entries
             lines.push("");
           });
           lines.push("");
           lines.push("");
+
+          if (result.chatMessages.length > 0) {
+            // Iterate through the chat messages array and format each entry
+            lines.push("---------------");
+            lines.push("CHAT MESSAGES");
+            lines.push("---------------");
+            result.chatMessages.forEach((entry) => {
+              lines.push(`${entry.personName} (${entry.timeStamp})`);
+              lines.push(entry.chatMessageText);
+              // Add an empty line between entries
+              lines.push("");
+            });
+            lines.push("");
+            lines.push("");
+          }
+
+          // Join the lines into a single string, replace "You" with userName from storage
+          textContent = lines
+            .join("\n")
+            .replace(/You \(/g, result.userName + " (");
+
+          console.log("Regular transcript:", textContent);
         }
-
-        // Join the lines into a single string, replace "You" with userName from storage
-        const textContent = lines
-          .join("\n")
-          .replace(/You \(/g, result.userName + " (");
-
-        console.log(textContent);
-
+        
         // Create a blob containing the text content
         const blob = new Blob([textContent], { type: "text/plain" });
-
+        
         // Read the blob as a data URL
         const reader = new FileReader();
 
@@ -439,19 +521,34 @@ chrome.action.onClicked.addListener(async (tab) => {
 
 async function fetchLateSummary(meetingId) {
   try {
+    console.log(`meetingId: ${meetingId}`);
+    console.log(meetingId);
+    
     const response = await fetch(
-      `${AMUREX_CONFIG.BASE_URL_BACKEND}/late_summary/${meetingId}`
+      // `https://ee612ac415f9.ngrok.app/late_summary/${meetingId}`,
+      `https://api.amurex.ai/late_summary/${meetingId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
     );
 
+    // Log the response status and text for debugging
+    console.log("Response status:", response.status);
+    const text = await response.text(); // Read the response as text
+    console.log("Response text:", text); // Log the response text
+
     if (!response.ok) {
-      throw new Error(`Server responded with ${response.status}`);
+      throw new Error(`Server responded with ${response.status}: ${text}`);
     }
 
-    const data = await response.json();
+    // Attempt to parse the response as JSON
+    const data = JSON.parse(text);
     return data;
   } catch (error) {
     console.error('Error fetching late meeting summary:', error);
     throw error;
   }
 }
-
