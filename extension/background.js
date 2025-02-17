@@ -215,7 +215,7 @@ chrome.tabs.onRemoved.addListener(async function (tabid) {
       console.log("Meeting ended, skipping notification");
       await chrome.storage.local.set({ 
         meetingTabId: null,
-        hasMeetingEnded: false 
+        hasMeetingEnded: false
       });
       console.log("Meeting tab id cleared for next meeting");
       return;

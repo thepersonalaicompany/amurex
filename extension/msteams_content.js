@@ -90,6 +90,7 @@ function createAnimatedPanel(meetingId) {
   const existingNotification = document.getElementById("live-notification");
 
   if (existingNotification) {
+    console.log("Existing notification found");
     // Update the content with a more spacious layout
     existingNotification.innerHTML = `
         <div style="display: flex; align-items: flex-start; gap: 20px; width: 100%;">
@@ -230,14 +231,18 @@ function createAnimatedPanel(meetingId) {
 }
 
 function showNotificationLive() {
+  console.log("showNotificationLive function called");
+  
   let html = document.querySelector("html");
+  if (!html) {
+    console.error("Could not find html element");
+    return;
+  }
+  
   let obj = document.createElement("div");
   obj.id = "live-notification";
-  let logo = document.createElement("img");
-  let text = document.createElement("p");
-  let buttonContainer = document.createElement("div");
-
-  // Style the container
+  
+  // Update the container styling to ensure visibility
   obj.style.cssText = `
       position: fixed;
       top: 20px;
@@ -246,12 +251,16 @@ function showNotificationLive() {
       background: black;
       padding: 20px;
       border-radius: 8px;
-      z-index: 10000;
+      z-index: 999999;
       width: 400px;
       font-family: "Host Grotesk", sans-serif;
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
     `;
 
   // Style logo
+  let logo = document.createElement("img");
   logo.setAttribute(
     "src",
     "https://www.amurex.ai/_next/image?url=%2F_next%2Fstatic%2Fmedia%2FAmurexLogo.56901b87.png&w=64&q=75"
@@ -261,6 +270,7 @@ function showNotificationLive() {
   logo.style.cssText = "border-radius: 4px";
 
   // Style text
+  let text = document.createElement("p");
   text.style.cssText = `
       color: #fff;
       margin: 10px 0;
@@ -269,6 +279,7 @@ function showNotificationLive() {
     "Meeting ended. Would you like to see the summary and action items?";
 
   // Style button container
+  let buttonContainer = document.createElement("div");
   buttonContainer.style.cssText = "display: flex; gap: 10px; margin-top: 10px;";
 
   // Create Yes button
@@ -302,8 +313,9 @@ function showNotificationLive() {
   // Add click handlers
   yesButton.addEventListener("click", async () => {
     const meetingId = await chrome.storage.local.get("meetingId");
+    console.log("Meeting ID in the showNotificationLive function:", meetingId.meetingId);
     createAnimatedPanel(meetingId.meetingId);
-    obj.remove();
+    // obj.remove();
   });
 
   noButton.addEventListener("click", () => {
@@ -317,7 +329,9 @@ function showNotificationLive() {
   buttonContainer.appendChild(yesButton);
   buttonContainer.appendChild(noButton);
 
-  if (html) html.append(obj);
+  console.log("Appending notification to HTML");
+  html.append(obj);
+  console.log("Notification should now be visible");
 }
 
 function setupWebSocket(meetingId) {
@@ -797,6 +811,10 @@ async function checkTeamsMeetingStart() {
     captionsActivated = false;
     observerInitialized = false;
 
+    // Show the end of meeting notification
+    console.log("Meeting ended, showing notification");
+    // showNotificationLive();
+
     // Save the transcript to local storage when the meeting ends
     if (transcriptMessages.length > 0) {
       localStorage.setItem("transcript", JSON.stringify(transcriptMessages));
@@ -1113,20 +1131,18 @@ function waitForMeetingId(context) {
 
 // Function to check URL parameters and show notification if needed
 function checkUrlAndShowNotification() {
+  console.log("checkUrlAndShowNotification called");
   const url = window.location.href;
   const urlObj = new URL(url);
 
-  // Get the encoded 'url' parameter from the query string
   const encodedUrl = urlObj.searchParams.get("url");
   console.log(`encodedUrl: ${encodedUrl}`);
 
   if (encodedUrl) {
-    // Extract meeting ID using regex
     const meetingId = encodedUrl.match(/\/meet\/(\d+)/)?.[1];
     console.log(`meetingId: ${meetingId}`);
 
     if (meetingId) {
-      // Send message to background script to make the request
       chrome.runtime.sendMessage(
         {
           type: "check_meeting_status",
@@ -1136,22 +1152,15 @@ function checkUrlAndShowNotification() {
         (response) => {
           if (chrome.runtime.lastError) {
             console.error("Error:", chrome.runtime.lastError);
-            // Show the notification anyway as fallback
-            showNotificationLive({
-              status: 200,
-              message:
-                "Meeting has started. Need a summary of what has been said?",
-            });
+            console.log("Showing notification as fallback");
+            // showNotificationLive();
             return;
           }
 
           console.log("Response from background:", response);
           if (response && response.is_meeting) {
-            showNotificationLive({
-              status: 200,
-              message:
-                "Meeting has started. Need a summary of what has been said?",
-            });
+            console.log("Meeting active, showing notification");
+            showNotificationLive();
           }
         }
       );
