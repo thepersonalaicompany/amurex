@@ -1,6 +1,6 @@
 {
   "name": "Amurex (Early Preview)",
-  "version": "1.0.23",
+  "version": "1.0.24",
   "manifest_version": 3,
   "description": "Your AI meeting Copilot",
   "side_panel": {
@@ -20,7 +20,10 @@
       "js": ["msteams_content.js"],
       "run_at": "document_end",
       "matches": ["https://teams.live.com/*", "https://teams.microsoft.com/*"],
-      "exclude_matches": ["https://teams.live.com/", "https://teams.microsoft.com/"]
+      "exclude_matches": [
+        "https://teams.live.com/",
+        "https://teams.microsoft.com/"
+      ]
     }
   ],
   "permissions": ["storage", "downloads", "sidePanel", "cookies", "scripting"],
@@ -45,4 +48,3 @@
     }
   }
 }
-

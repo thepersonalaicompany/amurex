@@ -2,7 +2,7 @@ const AMUREX_CONFIG = {
   // there is one more config in the content.js script
   BASE_URL_BACKEND: "https://api.amurex.ai",
   BASE_URL_WEB: "https://app.amurex.ai",
-  ANALYTICS_ENABLED: true
+  ANALYTICS_ENABLED: true,
 };
 
 chrome.sidePanel
@@ -81,21 +81,19 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 
     return true;
     // };
-  } else if ( message.type === "meeting_ended") {
+  } else if (message.type === "meeting_ended") {
     chrome.storage.local.set({ hasMeetingEnded: true }, function () {
       console.log("Meeting ended flag set");
     });
     // deleteKeysFromStorage();
-  } 
-    else if (
+  } else if (
     message.type === "open_side_panel" ||
     message.type === "open_late_meeting_side_panel" ||
     message.type === "open_file_upload_panel"
   ) {
     const pathMap = {
       open_side_panel: "sidepanels/sidepanel.html",
-      open_file_upload_panel: `sidepanels/chatsidepanel.html`
-        
+      open_file_upload_panel: `sidepanels/chatsidepanel.html`,
     };
 
     const panelPath = pathMap[message.type];
@@ -112,7 +110,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 
     // Set storage values
     chrome.storage.local.set({ redirect: message.type });
-    
+
     if (message.meetingId) {
       chrome.storage.local.set({ meetingId: message.meetingId });
     }
@@ -132,12 +130,12 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
               "Content-Type": "application/json",
               Accept: "application/json",
             },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
               uuid: userId,
               event_type: "open_sidepanel",
-              meeting_id: "unknown"
+              meeting_id: "unknown",
             }),
-          }).catch(error => {
+          }).catch((error) => {
             console.error("Error tracking sidepanel open:", error);
           });
         }
@@ -152,46 +150,47 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     console.log("Fetching late summary");
     console.log(message);
     fetchLateSummary(message.meetingId)
-      .then(data => { 
+      .then((data) => {
         console.log("Late summary fetched");
         console.log(data);
-        
-        sendResponse({ success: true, data }); })
-      .catch(error => sendResponse({ success: false, error: error.message }));
+
+        sendResponse({ success: true, data });
+      })
+      .catch((error) => sendResponse({ success: false, error: error.message }));
     return true; // Required for async response
-  } else if (message.type === 'check_meeting_status') {
+  } else if (message.type === "check_meeting_status") {
     const checkUrl = `${message.baseUrl}/check_meeting/${message.meetingId}`;
-    
+
     // First try without the header
     fetch(checkUrl, {
       headers: {
-        'Accept': 'application/json'
-      }
+        Accept: "application/json",
+      },
     })
-      .then(response => response.json())
+      .then((response) => response.json())
       .catch(() => {
         return fetch(checkUrl, {
           headers: {
-            'Accept': 'application/json',
-          }
-        }).then(response => response.json());
+            Accept: "application/json",
+          },
+        }).then((response) => response.json());
       })
-      .then(data => {
+      .then((data) => {
         sendResponse(data);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error checking meeting status:", error);
         // Fallback response
-        sendResponse({ 
+        sendResponse({
           is_meeting: true,
-          error: error.message 
+          error: error.message,
         });
       });
-      
+
     return true; // Required to use sendResponse asynchronously
   } else if (message.type === "check_meeting_ended") {
-    chrome.storage.local.get(['hasMeetingEnded'], function(result) {
-        sendResponse({ hasMeetingEnded: result.hasMeetingEnded });
+    chrome.storage.local.get(["hasMeetingEnded"], function (result) {
+      sendResponse({ hasMeetingEnded: result.hasMeetingEnded });
     });
     return true; // Required for async response
   } else if (message.type === "get_platform") {
@@ -203,23 +202,27 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   }
 });
 
-
 // Download transcript if meeting tab is closed
 chrome.tabs.onRemoved.addListener(async function (tabid) {
-  const data = await chrome.storage.local.get(["meetingTabId", "hasMeetingEnded", "platform"]);
-  
+  const data = await chrome.storage.local.get([
+    "meetingTabId",
+    "hasMeetingEnded",
+    "platform",
+  ]);
+
   if (tabid == data.meetingTabId) {
     console.log("Successfully intercepted tab close");
-    
+
     // Create new tab with platform-specific URL
-    const redirectUrl = data.platform === "msteams" 
-      ? "https://teams.live.com/v2/"
-      : "https://meet.google.com/landing";
-      
+    const redirectUrl =
+      data.platform === "msteams"
+        ? "https://teams.live.com/v2/"
+        : "https://meet.google.com/landing";
+
     const newTab = await chrome.tabs.create({ url: redirectUrl });
 
     // Wait a bit for the page to start loading
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Execute script in the new tab
     try {
@@ -238,17 +241,17 @@ chrome.tabs.onRemoved.addListener(async function (tabid) {
 async function injectNotification() {
   // Wait for the document body to be available
   if (!document.body) {
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       const observer = new MutationObserver((mutations, obs) => {
         if (document.body) {
           obs.disconnect();
           resolve();
         }
       });
-      
+
       observer.observe(document.documentElement, {
         childList: true,
-        subtree: true
+        subtree: true,
       });
     });
   }
@@ -289,7 +292,8 @@ async function injectNotification() {
     color: #fff;
     margin: 10px 0;
   `;
-  text.innerHTML = "Meeting ended. Would you like to see the summary and action items?";
+  text.innerHTML =
+    "Meeting ended. Would you like to see the summary and action items?";
 
   // Style button container
   buttonContainer.style.cssText = "display: flex; gap: 10px; margin-top: 10px;";
@@ -369,54 +373,66 @@ function downloadTranscript() {
         let fileName;
 
         if (pltprop === "msteams") {
-          fileName =
-          result.meetingStartTimeStamp
+          fileName = result.meetingStartTimeStamp
             ? `Amurex/Transcript | MS Teams meeting at ${result.meetingStartTimeStamp}.txt`
             : `Amurex/Transcript.txt`;
 
-          const uniqueMessages = Object.entries(result.transcript).reduce((acc, [key, value]) => {
-            if (key === 'transcript' && Array.isArray(value)) {
+          const uniqueMessages = Object.entries(result.transcript).reduce(
+            (acc, [key, value]) => {
+              if (key === "transcript" && Array.isArray(value)) {
                 // First remove duplicates
-              const withoutDuplicates = value.filter((item, index, array) => {
+                const withoutDuplicates = value.filter((item, index, array) => {
                   if (index === 0) return true;
                   const prev = array[index - 1];
-                  return !(item.message === prev.message && item.speaker === prev.speaker);
-              });
+                  return !(
+                    item.message === prev.message &&
+                    item.speaker === prev.speaker
+                  );
+                });
 
-              // Then group consecutive messages by speaker
-              const groupedTranscript = withoutDuplicates.reduce((grouped, current, index, array) => {
-                  if (index === 0 || current.speaker !== array[index - 1].speaker) {
+                // Then group consecutive messages by speaker
+                const groupedTranscript = withoutDuplicates.reduce(
+                  (grouped, current, index, array) => {
+                    if (
+                      index === 0 ||
+                      current.speaker !== array[index - 1].speaker
+                    ) {
                       // Start new group
                       grouped.push({
-                          speaker: current.speaker,
-                          message: current.message,
-                          timestamp: current.timestamp
+                        speaker: current.speaker,
+                        message: current.message,
+                        timestamp: current.timestamp,
                       });
-                  } else {
+                    } else {
                       // Append to last group's message
                       const lastGroup = grouped[grouped.length - 1];
-                      lastGroup.message += '. ' + current.message;
-                  }
-                  return grouped;
-              }, []);
+                      lastGroup.message += ". " + current.message;
+                    }
+                    return grouped;
+                  },
+                  []
+                );
 
-              return { ...acc, [key]: groupedTranscript };
-            }
-            return { ...acc, [key]: value };
-          }, {});
+                return { ...acc, [key]: groupedTranscript };
+              }
+              return { ...acc, [key]: value };
+            },
+            {}
+          );
 
           // Format the transcript in the desired style
-          textContent = Object.values(uniqueMessages).map(entry => {
-            return `${entry.speaker} (${entry.timestamp})\n${entry.message}\n`;
-          }).join('\n');
+          textContent = Object.values(uniqueMessages)
+            .map((entry) => {
+              return `${entry.speaker} (${entry.timestamp})\n${entry.message}\n`;
+            })
+            .join("\n");
 
           console.log("MS Teams transcript:", textContent);
         } else {
-
           fileName =
-          result.meetingTitle && result.meetingStartTimeStamp
-            ? `Amurex/Transcript | Google Meet at ${result.meetingStartTimeStamp}.txt`
-            : `Amurex/Transcript.txt`;
+            result.meetingTitle && result.meetingStartTimeStamp
+              ? `Amurex/Transcript | Google Meet at ${result.meetingStartTimeStamp}.txt`
+              : `Amurex/Transcript.txt`;
 
           // Create an array to store lines of the text file
           const lines = [];
@@ -453,10 +469,10 @@ function downloadTranscript() {
 
           console.log("Regular transcript:", textContent);
         }
-        
+
         // Create a blob containing the text content
         const blob = new Blob([textContent], { type: "text/plain" });
-        
+
         // Read the blob as a data URL
         const reader = new FileReader();
 
@@ -506,13 +522,13 @@ async function fetchLateSummary(meetingId) {
   try {
     console.log(`meetingId: ${meetingId}`);
     console.log(meetingId);
-    
+
     const response = await fetch(
       `https://api.amurex.ai/late_summary/${meetingId}`,
       {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       }
     );
@@ -530,7 +546,8 @@ async function fetchLateSummary(meetingId) {
     const data = JSON.parse(text);
     return data;
   } catch (error) {
-    console.error('Error fetching late meeting summary:', error);
+    console.error("Error fetching late meeting summary:", error);
     throw error;
   }
 }
+
