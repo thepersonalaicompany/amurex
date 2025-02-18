@@ -218,3 +218,62 @@
   height: 16px;
   margin: 0;
 }
+
+.coming-soon-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  background: #09090B;
+  color: #fff;
+  height: 100vh;
+}
+
+.coming-soon-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-circle {
+  background: #1E1E1E;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.coming-soon-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+  color: #FFFFFF;
+}
+
+.coming-soon-message {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.coming-soon-message p {
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0;
+  color: #FFFFFF;
+}
+
+.coming-soon-message .subtitle {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+}
+
+/* Add styles for the entire page background */
+body {
+  background: #09090B;
+  margin: 0;
+  padding: 0;
+}

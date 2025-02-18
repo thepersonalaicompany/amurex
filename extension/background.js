@@ -94,9 +94,8 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   ) {
     const pathMap = {
       open_side_panel: "sidepanels/sidepanel.html",
-      open_file_upload_panel: `sidepanels/file_upload_panel.html${
-        message.meetingId ? `?meetingId=${message.meetingId}` : ""
-      }`,
+      open_file_upload_panel: `sidepanels/chatsidepanel.html`
+        
     };
 
     const panelPath = pathMap[message.type];

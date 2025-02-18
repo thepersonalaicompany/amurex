@@ -229,7 +229,7 @@ function createAnimatedPanel(meetingId) {
   }
 }
 
-function showNotificationLive() {
+function showNotificationLive(meetingText) {
   console.log("showNotificationLive function called");
   
   let html = document.querySelector("html");
@@ -274,8 +274,7 @@ function showNotificationLive() {
       color: #fff;
       margin: 10px 0;
     `;
-  text.innerHTML =
-    "Meeting ended. Would you like to see the summary and action items?";
+  text.innerHTML = meetingText || "Meeting ended. Would you like to see the summary and action items?";
 
   // Style button container
   let buttonContainer = document.createElement("div");
@@ -1138,7 +1137,7 @@ function checkUrlAndShowNotification() {
           console.log("Response from background:", response);
           if (response && response.is_meeting) {
             console.log("Meeting active, showing notification");
-            showNotificationLive();
+            showNotificationLive("Meeting started. Would you like to see the summary and action items?");
           }
         }
       );
@@ -1149,7 +1148,7 @@ function checkUrlAndShowNotification() {
 console.log("Meeting ended, checking meeting status");
 chrome.runtime.sendMessage({ type: "check_meeting_ended" }, function(response) {
     if (response && response.hasMeetingEnded) {
-        showNotificationLive();
+        showNotificationLive("Meeting ended. Would you like to see the summary and action items?");
     }
 });
 
