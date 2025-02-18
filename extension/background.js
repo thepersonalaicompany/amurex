@@ -37,6 +37,11 @@ async function getUserId() {
   return null;
 }
 
+async function getPlatform() {
+  const platform = await chrome.storage.local.get("platform");
+  return platform.platform;
+}
+
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message.type == "new_meeting_started") {
     // Saving current tab id, to download transcript when this tab is closed
@@ -190,6 +195,12 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         sendResponse({ hasMeetingEnded: result.hasMeetingEnded });
     });
     return true; // Required for async response
+  } else if (message.type === "get_platform") {
+    (async () => {
+      const platform = await getPlatform();
+      sendResponse({ platform });
+    })();
+    return true;
   }
 });
 
