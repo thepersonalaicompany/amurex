@@ -24,18 +24,6 @@ chrome.runtime.onInstalled.addListener(function (details) {
   }
 });
 
-// function deleteKeysFromStorage() {
-//   const keysToDelete = ['mId'];
-
-//   chrome.storage.local.remove(keysToDelete, function() {
-//       if (chrome.runtime.lastError) {
-//           console.error("Error deleting keys:", chrome.runtime.lastError);
-//       } else {
-//           console.log(`Keys deleted: ${keysToDelete.join(', ')}`);
-//       }
-//   });
-// }
-
 async function getUserId() {
   session = await chrome.cookies.get({
     url: AMUREX_CONFIG.BASE_URL_WEB,
@@ -64,7 +52,6 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   } else if (message.action === "getUserId") {
     (async () => {
       const userId = await getUserId();
-      console.log(userId);
       sendResponse({ userId });
     })();
     return true;
@@ -179,7 +166,6 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     })
       .then(response => response.json())
       .catch(() => {
-        // If first attempt fails, try with the ngrok header
         return fetch(checkUrl, {
           headers: {
             'Accept': 'application/json',
@@ -215,17 +201,6 @@ chrome.tabs.onRemoved.addListener(async function (tabid) {
   if (tabid == data.meetingTabId) {
     console.log("Successfully intercepted tab close");
     
-    // Check if it was a meeting page using storage flag
-    // if (data.hasMeetingEnded) {
-    //   console.log("Meeting ended, skipping notification");
-    //   await chrome.storage.local.set({ 
-    //     meetingTabId: null,
-    //     hasMeetingEnded: false
-    //   });
-    //   console.log("Meeting tab id cleared for next meeting");
-    //   return;
-    // }
-    
     // Create new tab with platform-specific URL
     const redirectUrl = data.platform === "msteams" 
       ? "https://teams.live.com/v2/"
@@ -246,15 +221,6 @@ chrome.tabs.onRemoved.addListener(async function (tabid) {
     } catch (error) {
       console.error("Error injecting notification:", error);
     }
-
-    // Clear meetingTabId and hasMeetingEnded flags
-    // await chrome.storage.local.set({ 
-    //   meetingTabId: null,
-    //   hasMeetingEnded: false, 
-    // });
-    // console.log("Meeting tab id cleared for next meeting");
-
-    // deleteKeysFromStorage();
   }
 });
 
@@ -532,7 +498,6 @@ async function fetchLateSummary(meetingId) {
     console.log(meetingId);
     
     const response = await fetch(
-      // `https://ee612ac415f9.ngrok.app/late_summary/${meetingId}`,
       `https://api.amurex.ai/late_summary/${meetingId}`,
       {
         method: 'GET',

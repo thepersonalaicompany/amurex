@@ -5,7 +5,6 @@ console.log("MS teams platform local variable has been set");
 const BASE_URL_BACKEND = "https://api.amurex.ai";
 // Call the check function when the page loads
 checkUrlAndShowNotification();
-// const BASE_URL_BACKEND = "https://ee612ac415f9.ngrok.app";
 
 // CSS for notification
 const commonCSS = `background: rgb(255 255 255 / 10%); 
@@ -351,33 +350,6 @@ function setupWebSocket(meetingId) {
       const userId = response.userId;
       console.log("WS User ID:", userId);
       console.log("WS Meeting ID:", meetingId);
-
-      // const setMeetingId = async (mId) => {
-      //   return new Promise((resolve, reject) => {
-      //     chrome.storage.local.set({ mId }, () => {
-      //       if (chrome.runtime.lastError) {
-      //         return reject(chrome.runtime.lastError);
-      //       }
-      //       resolve(`WS Meeting ID set to: ${mId}`);
-      //     });
-      //   });
-      // };
-
-      // (async () => {
-      //   try {
-      //     const result = await setMeetingId(meetingId);
-      //     console.log(result);
-      //   } catch (error) {
-      //     console.error("Error setting Meeting ID:", error);
-      //   }
-      // })();
-
-      // https://a8f8-162-205-132-11.ngrok-free.app
-
-      // const wsUrl = `wss://${BASE_URL_BACKEND.replace(
-      //   "https://",
-      //   ""
-      // )}/ws?meeting_id=${meetingId}&user_id=${userId}`;
 
       const wsUrl = `wss://${BASE_URL_BACKEND.replace(
         "https://",
