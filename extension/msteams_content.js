@@ -773,6 +773,12 @@ async function checkTeamsMeetingStart() {
                 }
                 resolve(`Meeting ID set to: ${mId}`);
               });
+              chrome.runtime.sendMessage(
+                { type: "new_meeting_started" },
+                function (response) {
+                  console.log(response);
+                }
+              );
             });
           };
 
@@ -812,7 +818,7 @@ async function checkTeamsMeetingStart() {
     observerInitialized = false;
 
     // Show the end of meeting notification
-    console.log("Meeting ended, showing notification");
+    // console.log("Meeting ended, showing notification");
     // showNotificationLive();
 
     // Save the transcript to local storage when the meeting ends
@@ -1167,4 +1173,11 @@ function checkUrlAndShowNotification() {
     }
   }
 }
+
+console.log("Meeting ended, checking meeting status");
+chrome.runtime.sendMessage({ type: "check_meeting_ended" }, function(response) {
+    if (response && response.hasMeetingEnded) {
+        showNotificationLive();
+    }
+});
 

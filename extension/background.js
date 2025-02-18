@@ -199,32 +199,39 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
       });
       
     return true; // Required to use sendResponse asynchronously
+  } else if (message.type === "check_meeting_ended") {
+    chrome.storage.local.get(['hasMeetingEnded'], function(result) {
+        sendResponse({ hasMeetingEnded: result.hasMeetingEnded });
+    });
+    return true; // Required for async response
   }
 });
 
 
 // Download transcript if meeting tab is closed
 chrome.tabs.onRemoved.addListener(async function (tabid) {
-  const data = await chrome.storage.local.get(["meetingTabId", "hasMeetingEnded"]);
+  const data = await chrome.storage.local.get(["meetingTabId", "hasMeetingEnded", "platform"]);
   
   if (tabid == data.meetingTabId) {
     console.log("Successfully intercepted tab close");
     
     // Check if it was a meeting page using storage flag
-    if (data.hasMeetingEnded) {
-      console.log("Meeting ended, skipping notification");
-      await chrome.storage.local.set({ 
-        meetingTabId: null,
-        hasMeetingEnded: false
-      });
-      console.log("Meeting tab id cleared for next meeting");
-      return;
-    }
+    // if (data.hasMeetingEnded) {
+    //   console.log("Meeting ended, skipping notification");
+    //   await chrome.storage.local.set({ 
+    //     meetingTabId: null,
+    //     hasMeetingEnded: false
+    //   });
+    //   console.log("Meeting tab id cleared for next meeting");
+    //   return;
+    // }
     
-    // Create new tab and wait for it
-    const newTab = await chrome.tabs.create({ 
-      url: "https://meet.google.com/landing" 
-    });
+    // Create new tab with platform-specific URL
+    const redirectUrl = data.platform === "msteams" 
+      ? "https://teams.live.com/v2/"
+      : "https://meet.google.com/landing";
+      
+    const newTab = await chrome.tabs.create({ url: redirectUrl });
 
     // Wait a bit for the page to start loading
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -241,11 +248,11 @@ chrome.tabs.onRemoved.addListener(async function (tabid) {
     }
 
     // Clear meetingTabId and hasMeetingEnded flags
-    await chrome.storage.local.set({ 
-      meetingTabId: null,
-      hasMeetingEnded: false, 
-    });
-    console.log("Meeting tab id cleared for next meeting");
+    // await chrome.storage.local.set({ 
+    //   meetingTabId: null,
+    //   hasMeetingEnded: false, 
+    // });
+    // console.log("Meeting tab id cleared for next meeting");
 
     // deleteKeysFromStorage();
   }
