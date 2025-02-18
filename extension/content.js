@@ -1,3 +1,7 @@
+const plt = { platform: "gmeet" };
+chrome.storage.local.set(plt);
+console.log("Google Meet platform local variable has been set");
+
 //*********** GLOBAL VARIABLES **********//
 const timeFormat = {
   year: "numeric",
@@ -623,6 +627,7 @@ function meetingRoutines(uiType) {
 
           // can you send a notification to user saying that we are processing the transcript?
           overWriteChromeStorage(["transcript", "chatMessages"], true);
+          chrome.storage.local.set({ userName: "" });
 
           // we will need to make an API call here to save the transcript to the cloud
         });
@@ -753,7 +758,8 @@ function showNotificationLive() {
     color: #fff;
     margin: 10px 0;
   `;
-  text.innerHTML = "Meeting started. Would you like to see the meeting recap?";
+  text.innerHTML =
+    "Meeting ended. Would you like to see the summary and action items?";
 
   // Style button container
   buttonContainer.style.cssText = "display: flex; gap: 10px; margin-top: 10px;";
@@ -1264,3 +1270,4 @@ function createAnimatedPanel(meetingId) {
     );
   }
 }
+

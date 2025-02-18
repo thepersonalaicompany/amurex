@@ -8,7 +8,6 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <!-- <link rel="stylesheet" href="file_upload_panel.css" /> -->
   </head>
   <body>
     <div id="auth-container" class="auth-container">
@@ -35,7 +34,28 @@
       </div>
     </div>
 
-    <div id="authenticated-content" style="display: none">
+    <div id="coming-soon-container" class="auth-container" style="display: none;">
+      <div class="coming-soon-content">
+        <div class="coming-soon-header">
+          <div class="logo-circle">
+            <img
+              src="https://www.amurex.ai/_next/image?url=%2F_next%2Fstatic%2Fmedia%2FAmurexLogo.56901b87.png&w=64&q=75"
+              alt="Amurex Logo"
+              class="auth-logo"
+              height="32"
+              width="32"
+            />
+          </div>
+          <h2>Coming Soon to Teams!</h2>
+        </div>
+        <div class="coming-soon-message">
+          <p>Live suggestions are currently only available for Google Meet.</p>
+          <p class="subtitle">We're working hard to bring this feature to Microsoft Teams. Stay tuned!</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="authenticated-content">
       <header class="fixed-header">
         <div class="header-content">
           <div class="header-left">
@@ -117,7 +137,7 @@
         </div>
       </header>
 
-      <div class="content-wrapper">
+      <div class="content-wrapper" id="live-suggestions-content">
         <div class="section" id="live-suggestions">
           <h2 style="color: #fafafa; padding-left: 12px; padding-right: 12px">
             Live Suggestions

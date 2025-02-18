@@ -1,4 +1,14 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // Check platform when page loads
+  chrome.storage.local.get("platform", function(result) {
+    if (result.platform === "msteams") {
+      // Hide both auth and authenticated content
+      document.getElementById("live-suggestions-content").style.display = "none";
+      // Show coming soon message
+      document.getElementById("coming-soon-container").style.display = "flex";
+    }
+  });
+
   checkSession(updateUI);
   setupCookieListener(updateUI);
   setupQAObserver();
