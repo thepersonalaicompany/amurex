@@ -112,6 +112,21 @@ Take control of your meetings with Amurex, and let it handle the busywork while 
 6. Follow the web setup instructions in its `README.md`
 7. Load the unpacked extension in Chrome
 
+## Browser Support
+- Google Chrome/Chromium
+- Firefox (109.0 or later)
+
+## Installation
+
+### Chrome
+1. Install Amurex from the [Chrome Web Store](https://chromewebstore.google.com/detail/amurex/dckidmhhpnfhachdpobgfbjnhfnmddmc)
+
+### Firefox
+1. Download the latest Firefox release from [Releases](https://github.com/thepersonalaicompany/amurex/releases)
+2. Open Firefox and navigate to `about:debugging`
+3. Click "This Firefox" and then "Load Temporary Add-on"
+4. Select the `manifest.json` from the downloaded Firefox extension folder
+
 ## Using the development version
 
 1. Download the latest zip
