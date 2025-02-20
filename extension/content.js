@@ -930,16 +930,25 @@ function transcriber(mutationsList, observer) {
       const people =
         document.querySelector(".a4cQT")?.childNodes[1]?.firstChild
           ?.childNodes ||
-        document.querySelector(".a4cQT")?.firstChild?.firstChild?.childNodes;
+        document.querySelector(".a4cQT")?.firstChild?.firstChild?.childNodes || 
+
+      console.log("people", people, document.querySelectorAll(".nMcdL"));
+
+      const people_ui2 = document.querySelectorAll(".nMcdL");
+
       // Begin parsing transcript
       if (people.length > 0) {
         // Get the last person
         const person = people[people.length - 1];
+        console.log("person", person);
         // CRITICAL DOM DEPENDENCY
         const currentPersonName = person.childNodes[0].textContent;
+        console.log("currentPersonName", currentPersonName);
         // CRITICAL DOM DEPENDENCY
         const currentTranscriptText =
           person.childNodes[1].lastChild.textContent;
+
+        
 
         // Starting fresh in a meeting or resume from no active transcript
         if (beforeTranscriptText == "") {
@@ -987,7 +996,11 @@ function transcriber(mutationsList, observer) {
           }
         }
       }
+
       // No people found in transcript DOM
+      else if (people_ui2.length > 0) {
+        console.log("people_ui2", people_ui2);
+      }
       else {
         // No transcript yet or the last person stopped speaking(and no one has started speaking next)
         console.log("No active transcript");
