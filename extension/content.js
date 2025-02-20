@@ -1009,6 +1009,7 @@ function transcriber(mutationsList, observer) {
                 // CRITICAL DOM DEPENDENCY
                 const currentTranscriptText =
                   person.childNodes[1].lastChild.textContent;
+                  console.log("currentTranscriptText", currentTranscriptText);
         
                 
         
