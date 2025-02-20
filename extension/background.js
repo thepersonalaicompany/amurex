@@ -365,6 +365,8 @@ function downloadTranscript() {
         let plt = await chrome.storage.local.get("platform");
         let pltprop = plt.platform;
 
+        console.log(pltprop);
+
         let textContent; // Declare textContent outside the if/else blocks
         let fileName;
 
@@ -411,84 +413,127 @@ function downloadTranscript() {
           }).join('\n');
 
           console.log("MS Teams transcript:", textContent);
-        } else {
 
-          fileName =
-          result.meetingTitle && result.meetingStartTimeStamp
-            ? `Amurex/Transcript | Google Meet at ${result.meetingStartTimeStamp}.txt`
-            : `Amurex/Transcript.txt`;
+          // Create a blob containing the text content
+          const blob = new Blob([textContent], { type: "text/plain" });
+          
+          // Read the blob as a data URL
+          const reader = new FileReader();
 
-          // Create an array to store lines of the text file
-          const lines = [];
+          // Download once blob is read
+          reader.onload = function (event) {
+            const dataUrl = event.target.result;
 
-          // Iterate through the transcript array and format each entry
-          result.transcript.forEach((entry) => {
-            lines.push(`${entry.personName} (${entry.timeStamp})`);
-            lines.push(entry.personTranscript);
-            // Add an empty line between entries
-            lines.push("");
-          });
-          lines.push("");
-          lines.push("");
-
-          if (result.chatMessages.length > 0) {
-            // Iterate through the chat messages array and format each entry
-            lines.push("---------------");
-            lines.push("CHAT MESSAGES");
-            lines.push("---------------");
-            result.chatMessages.forEach((entry) => {
-              lines.push(`${entry.personName} (${entry.timeStamp})`);
-              lines.push(entry.chatMessageText);
-              // Add an empty line between entries
-              lines.push("");
-            });
-            lines.push("");
-            lines.push("");
-          }
-
-          // Join the lines into a single string, replace "You" with userName from storage
-          textContent = lines
-            .join("\n")
-            .replace(/You \(/g, result.userName + " (");
-
-          console.log("Regular transcript:", textContent);
-        }
-        
-        // Create a blob containing the text content
-        const blob = new Blob([textContent], { type: "text/plain" });
-        
-        // Read the blob as a data URL
-        const reader = new FileReader();
-
-        // Download once blob is read
-        reader.onload = function (event) {
-          const dataUrl = event.target.result;
-
-          // Create a download with Chrome Download API
-          chrome.downloads
-            .download({
-              url: dataUrl,
-              filename: fileName,
-              conflictAction: "uniquify",
-            })
-            .then(() => {
-              console.log("Transcript downloaded to Amurex directory");
-            })
-            .catch((error) => {
-              console.log(error);
-              chrome.downloads.download({
+            // Create a download with Chrome Download API
+            chrome.downloads
+              .download({
                 url: dataUrl,
-                filename: "Amurex/Transcript.txt",
+                filename: fileName,
                 conflictAction: "uniquify",
+              })
+              .then(() => {
+                console.log("Transcript downloaded to Amurex directory");
+              })
+              .catch((error) => {
+                console.log(error);
+                chrome.downloads.download({
+                  url: dataUrl,
+                  filename: "Amurex/Transcript.txt",
+                  conflictAction: "uniquify",
+                });
+                console.log(
+                  "Invalid file name. Transcript downloaded to Amurex directory with simple file name."
+                );
               });
-              console.log(
-                "Invalid file name. Transcript downloaded to Amurex directory with simple file name."
-              );
-            });
-        };
+          };
 
-        // Read the blob and download as text file
-        reader.readAsDataURL(blob);
+          // Read the blob and download as text file
+          reader.readAsDataURL(blob);
+          return;
+        } else if (pltprop === "gmeet") {
+            if (result.transcript) {
+              // Create file name if values or provided, use default otherwise
+              const fileName =
+                result.meetingTitle && result.meetingStartTimeStamp
+                  ? `Amurex/Transcript-${result.meetingTitle} at ${result.meetingStartTimeStamp}.txt`
+                  : `Amurex/Transcript.txt`;
+      
+              const transcriptString = JSON.stringify(result.transcript, null, 2);
+              console.log(`THIS IS THE TRANSCRIPT BEFORE SAVING TO TXT: ${transcriptString}`);
+              
+                  // Create an array to store lines of the text file
+              const lines = [];
+      
+              // Iterate through the transcript array and format each entry
+              result.transcript.forEach((entry) => {
+                lines.push(`${entry.personName} (${entry.timeStamp})`);
+                lines.push(entry.personTranscript);
+                // Add an empty line between entries
+                lines.push("");
+              });
+              lines.push("");
+              lines.push("");
+      
+              if (result.chatMessages.length > 0) {
+                // Iterate through the chat messages array and format each entry
+                lines.push("---------------");
+                lines.push("CHAT MESSAGES");
+                lines.push("---------------");
+                result.chatMessages.forEach((entry) => {
+                  lines.push(`${entry.personName} (${entry.timeStamp})`);
+                  lines.push(entry.chatMessageText);
+                  // Add an empty line between entries
+                  lines.push("");
+                });
+                lines.push("");
+                lines.push("");
+              }
+      
+              // Join the lines into a single string, replace "You" with userName from storage
+              const textContent = lines
+                .join("\n")
+                .replace(/You \(/g, result.userName + " (");
+      
+              console.log(textContent);
+      
+              // Create a blob containing the text content
+              const blob = new Blob([textContent], { type: "text/plain" });
+      
+              // Read the blob as a data URL
+              const reader = new FileReader();
+      
+              // Download once blob is read
+              reader.onload = function (event) {
+                const dataUrl = event.target.result;
+      
+                // Create a download with Chrome Download API
+                chrome.downloads
+                  .download({
+                    url: dataUrl,
+                    filename: fileName,
+                    conflictAction: "uniquify",
+                  })
+                  .then(() => {
+                    console.log("Transcript downloaded to Amurex directory");
+                  })
+                  .catch((error) => {
+                    console.log(error);
+                    chrome.downloads.download({
+                      url: dataUrl,
+                      filename: "Amurex/Transcript.txt",
+                      conflictAction: "uniquify",
+                    });
+                    console.log(
+                      "Invalid file name. Transcript downloaded to Amurex directory with simple file name."
+                    );
+                  });
+              };
+      
+              // Read the blob and download as text file
+              reader.readAsDataURL(blob);
+              return;
+            } else console.log("No transcript found");
+        }
       } else console.log("No transcript found");
     }
   );
