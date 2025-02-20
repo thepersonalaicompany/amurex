@@ -759,7 +759,7 @@ function showNotificationLive() {
     margin: 10px 0;
   `;
   text.innerHTML =
-    "Meeting ended. Would you like to see the summary and action items?";
+    "Meeting has started. Would you like to see the meeting recap?";
 
   // Style button container
   buttonContainer.style.cssText = "display: flex; gap: 10px; margin-top: 10px;";
@@ -1341,4 +1341,3 @@ function createAnimatedPanel(meetingId) {
     );
   }
 }
-

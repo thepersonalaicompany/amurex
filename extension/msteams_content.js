@@ -231,16 +231,16 @@ function createAnimatedPanel(meetingId) {
 
 function showNotificationLive(meetingText) {
   console.log("showNotificationLive function called");
-  
+
   let html = document.querySelector("html");
   if (!html) {
     console.error("Could not find html element");
     return;
   }
-  
+
   let obj = document.createElement("div");
   obj.id = "live-notification";
-  
+
   // Update the container styling to ensure visibility
   obj.style.cssText = `
       position: fixed;
@@ -274,7 +274,9 @@ function showNotificationLive(meetingText) {
       color: #fff;
       margin: 10px 0;
     `;
-  text.innerHTML = meetingText || "Meeting ended. Would you like to see the summary and action items?";
+  text.innerHTML =
+    meetingText ||
+    "Meeting ended. Would you like to see the summary and action items?";
 
   // Style button container
   let buttonContainer = document.createElement("div");
@@ -311,7 +313,10 @@ function showNotificationLive(meetingText) {
   // Add click handlers
   yesButton.addEventListener("click", async () => {
     const meetingId = await chrome.storage.local.get("meetingId");
-    console.log("Meeting ID in the showNotificationLive function:", meetingId.meetingId);
+    console.log(
+      "Meeting ID in the showNotificationLive function:",
+      meetingId.meetingId
+    );
     createAnimatedPanel(meetingId.meetingId);
     // obj.remove();
   });
@@ -1137,7 +1142,9 @@ function checkUrlAndShowNotification() {
           console.log("Response from background:", response);
           if (response && response.is_meeting) {
             console.log("Meeting active, showing notification");
-            showNotificationLive("Meeting started. Would you like to see the summary and action items?");
+            showNotificationLive(
+              "Meeting started. Would you like to see the summary and action items?"
+            );
           }
         }
       );
@@ -1146,9 +1153,13 @@ function checkUrlAndShowNotification() {
 }
 
 console.log("Meeting ended, checking meeting status");
-chrome.runtime.sendMessage({ type: "check_meeting_ended" }, function(response) {
+chrome.runtime.sendMessage(
+  { type: "check_meeting_ended" },
+  function (response) {
     if (response && response.hasMeetingEnded) {
-        showNotificationLive("Meeting ended. Would you like to see the summary and action items?");
+      showNotificationLive(
+        "Meeting ended. Would you like to see the summary and action items?"
+      );
     }
-});
-
+  }
+);
