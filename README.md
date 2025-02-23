@@ -30,6 +30,7 @@ Take control of your meetings with Amurex, and let it handle the busywork while 
 
 ## Supported meeting platforms
 - Google Meet
+- MS Teams
 - [ ] More coming soon!
 
 ## Features
