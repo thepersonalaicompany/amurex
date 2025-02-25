@@ -1,10 +1,10 @@
 {
   "name": "Amurex (Early Preview)",
-  "version": "1.0.25",
+  "version": "1.0.26",
   "manifest_version": 3,
   "description": "Your AI meeting Copilot",
   "side_panel": {
-    "default_path": "sidepanels/sidepanel.html"
+    "default_path": "sidepanels-react/dist/index.html"
   },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
