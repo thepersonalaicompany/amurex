@@ -793,10 +793,6 @@ async function checkTeamsMeetingStart() {
     captionsActivated = false;
     observerInitialized = false;
 
-    // Show the end of meeting notification
-    // console.log("Meeting ended, showing notification");
-    // showNotificationLive();
-
     // Save the transcript to local storage when the meeting ends
     if (transcriptMessages.length > 0) {
       localStorage.setItem("transcript", JSON.stringify(transcriptMessages));
@@ -1158,7 +1154,7 @@ chrome.runtime.sendMessage(
   function (response) {
     if (response && response.hasMeetingEnded) {
       showNotificationLive(
-        "Meeting ended. Would you like to see the summary and action items?"
+        "Meeting has really ended. Would you like to see the summary and action items?"
       );
     }
   }
