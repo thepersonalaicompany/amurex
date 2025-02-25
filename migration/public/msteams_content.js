@@ -26,6 +26,9 @@ chrome.storage.local.set({ mId: meetingId });
 // Send message to background script that a new meeting has started
 chrome.runtime.sendMessage({ type: "new_meeting_started" });
 
+// Store the current tab URL for later use
+chrome.storage.local.set({ meetingTabUrl: window.location.href });
+
 // Listen for messages from the page
 window.addEventListener("message", function (event) {
   // We only accept messages from ourselves
@@ -143,13 +146,22 @@ function createFileUploadButton() {
 }
 
 // Wait for the page to load
-window.addEventListener("load", function() {
-  // Create the buttons
-  setTimeout(() => {
-    createSidePanelButton();
+window.addEventListener("load", async function() {
+  // Create the main button
+  createSidePanelButton();
+  
+  // Get storage data
+  const storage = await chrome.storage.local.get(['mId', 'meetingTabId']);
+  
+  // Only show late meeting button if meeting has started
+  if (storage.meetingTabId) {
     createLateMeetingSidePanelButton();
+  }
+  
+  // Only show upload context button if we have a meetingId
+  if (storage.mId && storage.mId !== 'unknown') {
     createFileUploadButton();
-  }, 2000); // Delay to ensure Teams UI is loaded
+  }
   
   // Listen for meeting end
   window.addEventListener("beforeunload", function() {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Header from '../../components/Header';
 import { trackEvent, downloadTranscript } from '../../utils/api';
 
@@ -10,6 +10,8 @@ const Summary = () => {
   const [isEditingActionItems, setIsEditingActionItems] = useState(false);
   const [participants, setParticipants] = useState([]);
   const [date, setDate] = useState('');
+  const [isExportDropdownOpen, setIsExportDropdownOpen] = useState(false);
+  const exportDropdownRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -80,8 +82,113 @@ const Summary = () => {
   };
 
   const handleExportToApps = () => {
+    setIsExportDropdownOpen(!isExportDropdownOpen);
     trackEvent('open_export_dropdown');
   };
+
+  const handleCopyToClipboard = () => {
+    // Combine summary and action items
+    const formattedActionItems = actionItems
+      .map(person => `${person.person}:\n${person.items.map(item => `- ${item}`).join('\n')}`)
+      .join('\n\n');
+    
+    const fullText = `Summary:\n${summary}\n\nAction Items:\n${formattedActionItems}`;
+    
+    navigator.clipboard.writeText(fullText);
+    setIsExportDropdownOpen(false);
+    trackEvent('copy_all_to_clipboard');
+  };
+
+  const handleExportToExternalApps = () => {
+    const meetingId = window.location.href.includes("meetingId=")
+      ? window.location.href.split("meetingId=")[1].split("&")[0]
+      : "unknown";
+
+    chrome.runtime.sendMessage(
+      { action: "getUserId" },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          console.error("Error getting user id:", chrome.runtime.lastError);
+          return;
+        }
+
+        const userId = response.userId;
+
+        // Track the event if analytics is enabled
+        if (window.AMUREX_CONFIG.ANALYTICS_ENABLED) {
+          fetch(`${window.AMUREX_CONFIG.BASE_URL_BACKEND}/track`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              uuid: userId,
+              meeting_id: meetingId,
+              event_type: "share_to_apps",
+            }),
+          }).catch((error) => {
+            console.error("Error tracking share:", error);
+          });
+        }
+
+        // Format action items
+        const cleanActionItems = actionItems
+          .map(person => person.items
+            .map(item => `- [ ] ${item.trim()}`)
+            .join('\n'))
+          .join('\n');
+
+        // Format summary
+        const cleanSummary = summary
+          .split('\n')
+          .filter(line => line.trim())
+          .map(line => {
+            if (line.match(/^[*-]/)) {
+              return line.replace(/^([*-]+)\s*/, "$1 ").trim();
+            }
+            return line.trim();
+          })
+          .join('\n');
+
+        const markdownText = `## Action Items\n${cleanActionItems}\n\n## Meeting Summary\n${cleanSummary}`;
+
+        const shareOptions = {
+          text: markdownText,
+          title: "Meeting Notes",
+        };
+
+        if (navigator.canShare && navigator.canShare(shareOptions)) {
+          navigator.share(shareOptions)
+            .then(() => {
+              console.log("Shared successfully");
+              setIsExportDropdownOpen(false);
+            })
+            .catch((error) => {
+              if (error.name !== "AbortError") {
+                console.error("Error sharing:", error);
+              }
+            });
+        } else {
+          alert("Web Share API is not supported in your browser");
+        }
+      }
+    );
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exportDropdownRef.current && !exportDropdownRef.current.contains(event.target)) {
+        setIsExportDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="pb-16">
@@ -89,13 +196,27 @@ const Summary = () => {
       
       <div className="p-4">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
+          <div className="flex items-center relative" ref={exportDropdownRef}>
             <button 
               className="flex items-center gap-2 bg-[#18181B] hover:bg-[#27272A] text-white px-4 py-2 rounded-lg text-sm"
-              onClick={handleExportToApps}
+              onClick={() => setIsExportDropdownOpen(!isExportDropdownOpen)}
             >
               <svg 
                 className="w-5 h-5" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor"
+              >
+                <path 
+                  d="M12 16V8M12 8L9 11M12 8L15 11" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <span>Export Notes</span>
+              <svg 
+                className={`w-4 h-4 transition-transform ${isExportDropdownOpen ? 'rotate-180' : ''}`}
                 viewBox="0 0 24 24" 
                 fill="none" 
                 stroke="currentColor"
@@ -107,8 +228,53 @@ const Summary = () => {
                   strokeLinejoin="round"
                 />
               </svg>
-              <span>Export Notes</span>
             </button>
+            
+            {isExportDropdownOpen && (
+              <div className="absolute top-full left-0 mt-1 w-56 bg-[#18181B] border border-[rgba(255,255,255,0.1)] rounded-lg shadow-lg z-10">
+                <div className="py-1">
+                  <button 
+                    className="flex items-center gap-2 w-full text-left px-4 py-2 text-white hover:bg-[#27272A]"
+                    onClick={handleCopyToClipboard}
+                  >
+                    <svg 
+                      className="w-5 h-5" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor"
+                    >
+                      <path 
+                        d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <span>Copy to clipboard</span>
+                  </button>
+                  
+                  <button 
+                    className="flex items-center gap-2 w-full text-left px-4 py-2 text-white hover:bg-[#27272A]"
+                    onClick={handleExportToExternalApps}
+                  >
+                    <svg 
+                      className="w-5 h-5" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor"
+                    >
+                      <path 
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <span>Export to apps</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           
           <button 
@@ -122,7 +288,13 @@ const Summary = () => {
               stroke="currentColor"
             >
               <path 
-                d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" 
+                d="M12 16V8M12 16L9 13M12 16L15 13" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              />
+              <path 
+                d="M3 15V16C3 18.2091 4.79086 20 7 20H17C19.2091 20 21 18.2091 21 16V15" 
                 strokeWidth="2" 
                 strokeLinecap="round" 
                 strokeLinejoin="round"

@@ -51,7 +51,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         console.log("Meeting tab id saved");
       });
     });
-  } else if (message.type == "download") {
+  } else if (message.type == "download_transcript") {
     // Invalidate tab id since transcript is downloaded, prevents double downloading of transcript from tab closed event listener
     downloadTranscript();
   } else if (message.action === "getUserId") {

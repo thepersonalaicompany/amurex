@@ -149,7 +149,7 @@ export const downloadTranscript = () => {
   try {
     if (window.chrome && window.chrome.runtime) {
       chrome.runtime.sendMessage({
-        action: 'downloadTranscript'
+        action: 'download_transcript'
       });
     }
   } catch (error) {
