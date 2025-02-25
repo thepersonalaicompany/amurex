@@ -455,8 +455,10 @@ function showNotification(extensionStatusJSON) {
 
   // Watch for the end button
   const checkEndButton = setInterval(() => {
+    const meetingEndIconData = {};
     const endButtonExists =
-      contains(meetingEndIconData.selector, meetingEndIconData.text).length > 0;
+      contains(meetingEndIconData?.selector, meetingEndIconData?.text).length >
+      0;
 
     if (endButtonExists) {
       obj.style.display = "none";

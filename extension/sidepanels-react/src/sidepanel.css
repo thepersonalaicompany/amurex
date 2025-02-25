@@ -1,11 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Host+Grotesk:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Host+Grotesk:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap");
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   margin: 0;
   padding: 0;
-  background: #09090B;
+  background: #09090b;
   color: #ffffff;
   height: 100vh;
   overflow: hidden;
@@ -16,7 +16,7 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  background: #09090B;
+  background: #09090b;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   z-index: 100;
 }
@@ -83,13 +83,14 @@ body {
   color: rgba(255, 255, 255, 0.6);
 }
 
-#meeting-summary, #action-items {
+#meeting-summary,
+#action-items {
   margin-bottom: 1.5rem;
   min-height: 120px;
   overflow-y: auto;
   color: rgba(255, 255, 255, 0.9);
   padding: 5px;
-  background: #1E1E1E;
+  /* background: #1e1e1e; */
 }
 
 #meeting-summary[contenteditable="true"] {
@@ -160,24 +161,24 @@ body {
   font-size: 14px;
   font-weight: 500;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  background: #09090B;
-  color: #FAFAFA;
+  background: #09090b;
+  color: #fafafa;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
 }
 
 .action-btn.purple {
-  background: #7C3AED;
-  border-color: #7C3AED;
+  background: #7c3aed;
+  border-color: #7c3aed;
 }
 
 .action-btn:hover {
-  background: #27272A;
+  background: #27272a;
 }
 
 .action-btn.purple:hover {
-  background: #6D28D9;
+  background: #6d28d9;
 }
 
 .auth-container {
@@ -258,7 +259,7 @@ body {
 }
 
 .email-actions {
-  background: #1e1e1e;
+  /* background: #1e1e1e; */
   border-radius: 8px;
   margin-bottom: 1.5rem;
 }
@@ -287,7 +288,8 @@ body {
   accent-color: #c76dcc;
 }
 
-.send-btn, .download-btn {
+.send-btn,
+.download-btn {
   background: #c76dcc;
   color: #ffffff;
   border: 1px solid #c76dcc;
@@ -307,7 +309,8 @@ body {
   transition: background 0.2s;
 }
 
-.send-btn:hover, .download-btn:hover {
+.send-btn:hover,
+.download-btn:hover {
   background: #c76dcc;
   transition: background box-shadow 0.2s;
   box-shadow: 0 2px 3px rgba(82, 82, 82, 0.5);
@@ -513,7 +516,7 @@ body {
   align-items: center;
   justify-content: flex-end;
 }
-  
+
 /* Thin scrollbar styles */
 ::-webkit-scrollbar {
   width: 6px;
@@ -545,7 +548,7 @@ body {
   left: 0;
   right: 0;
   height: 60px;
-  background: #09090B;
+  background: #09090b;
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -572,7 +575,7 @@ body {
 }
 
 .nav-item.active {
-  color: #9334E9;
+  color: #9334e9;
   background: rgba(147, 51, 234, 0.1);
 }
 
@@ -604,13 +607,12 @@ body {
   margin-bottom: 16px;
 }
 
-
 #meeting-summary.card,
 #action-items.card {
   flex: 1;
   overflow-y: auto;
   height: 40vh;
-  background: #09090B;
+  /* background: #09090B; */
   color: rgba(255, 255, 255, 0.9);
   padding-left: 12px;
   padding-right: 12px;
@@ -637,31 +639,30 @@ body {
   font-size: 14px;
   font-weight: 500;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  background: #09090B;
-  color: #FAFAFA;
+  background: #09090b;
+  color: #fafafa;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
 }
 
 .action-btn:hover {
-  background: #2A2A2A;
+  background: #2a2a2a;
 }
 
 .action-btn.purple {
-  background: #9334E9;
+  background: #9334e9;
   border: none;
 }
 
 .action-btn.purple:hover {
-  background: #9334E9;
+  background: #9334e9;
 }
 
 .action-btn svg {
   width: 20px;
   height: 20px;
 }
-
 
 /* Update text colors */
 h2 {
@@ -709,12 +710,12 @@ h2 {
 }
 
 .copy-btn:hover {
-  color: #8B5CF6;
+  color: #8b5cf6;
   background: rgba(139, 92, 246, 0.1);
 }
 
 .edit-btn:hover {
-  color: #8B5CF6;
+  color: #8b5cf6;
   background: rgba(139, 92, 246, 0.1);
 }
 
@@ -750,7 +751,7 @@ h2 {
   top: calc(100% + 4px);
   left: 0;
   right: 0;
-  background: #18181B;
+  background: #18181b;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 4px;
@@ -798,10 +799,10 @@ h2 {
   align-items: center;
   gap: 6px;
   padding: 8px 10px;
-  background: #18181B;
-  border: 1px solid #27272A;
+  background: #18181b;
+  border: 1px solid #27272a;
   border-radius: 8px;
-  color: #FAFAFA;
+  color: #fafafa;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -809,12 +810,10 @@ h2 {
 }
 
 .black-btn:hover {
-  background: #27272A;
+  background: #27272a;
 }
 
 .black-btn svg {
   width: 20px;
   height: 20px;
 }
-
-
