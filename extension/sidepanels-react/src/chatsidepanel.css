@@ -112,7 +112,7 @@
 }
 
 .content-wrapper {
-  margin-top: 60px;
+  margin-top: 45px;
   padding: 16px;
   height: calc(100vh - 120px);
   overflow-y: auto;
@@ -128,7 +128,7 @@
 }
 
 .section h3 {
-  font-size: 24px;
+  font-size: 14px;
   font-weight: 600;
   margin: 0 0 16px 0;
   color: rgba(255, 255, 255, 0.9);
@@ -176,7 +176,6 @@
   transition: background 0.2s;
   height: 48px;
   margin-bottom: 12px;
-  width: 100%;
 }
 
 .file-upload-label:hover {
@@ -243,13 +242,32 @@
   overflow-y: auto;
 }
 
+.action-btn-2 {
+  width: 100%;
+  padding: 8px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  background: #09090b;
+  color: #fafafa;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  border: none;
+}
+
+
 .upload-container {
   display: flex;
   flex-direction: column;
   padding: 16px;
   background: #09090B;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid transparent;
   margin-bottom: 16px;
 }
 

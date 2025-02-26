@@ -851,7 +851,7 @@ const Sidepanel = ({ setRoute, setMeetingId }) => {
               className='nav-icon'
               viewBox='0 0 24 24'
               fill='none'
-              stroke='currentColor'
+              stroke='rgba(255, 255, 255, 0.5)'
             >
               <path
                 d='M4 6h16M4 12h16M4 18h7'
@@ -871,7 +871,7 @@ const Sidepanel = ({ setRoute, setMeetingId }) => {
               className='nav-icon'
               viewBox='0 0 24 24'
               fill='none'
-              stroke='currentColor'
+              stroke='rgba(255, 255, 255, 0.5)'
             >
               <path
                 d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'
