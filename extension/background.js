@@ -508,7 +508,7 @@ async function fetchLateSummary(meetingId) {
     console.log(meetingId);
     
     const response = await fetch(
-      `https://api.amurex.ai/late_summary/${meetingId}`,
+      AMUREX_CONFIG.BASE_URL_BACKEND + `/late_summary/${meetingId}`,
       {
         method: 'GET',
         headers: {
