@@ -149,7 +149,8 @@ body {
   font-size: 16px;
 }
 
-.action-btn {
+.action-btn,
+.action-btn-2 {
   width: 100%;
   padding: 8px 16px;
   display: inline-flex;
@@ -553,6 +554,7 @@ body {
   align-items: center;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding: 8px 16px;
+  gap: 8px;
 }
 
 .nav-item {
@@ -604,7 +606,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   margin-bottom: 16px;
-  background: #09090B;
+  background: #09090b;
   overflow: hidden;
 }
 
@@ -658,7 +660,7 @@ body {
 }
 
 .action-btn.purple:hover {
-  background: #8429D8;
+  background: #8429d8;
 }
 
 .action-btn svg {
@@ -759,7 +761,7 @@ h2 {
   top: calc(100% + 4px);
   left: 0;
   right: 0;
-  background: #09090B;
+  background: #09090b;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 4px;
@@ -807,10 +809,10 @@ h2 {
   align-items: center;
   gap: 6px;
   padding: 8px 10px;
-  background: #09090B;
-  border: 1px solid #27272A;
+  background: #09090b;
+  border: 1px solid #27272a;
   border-radius: 8px;
-  color: #FAFAFA;
+  color: #fafafa;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -818,7 +820,7 @@ h2 {
 }
 
 .black-btn:hover {
-  background: #27272A;
+  background: #27272a;
 }
 
 .black-btn svg {
