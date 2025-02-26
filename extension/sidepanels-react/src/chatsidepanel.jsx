@@ -285,6 +285,20 @@ const ChatSidepanel = ({ setRoute }) => {
               </p>
             </div>
           </div>
+          <nav className='bottom-nav'>
+            <Link to='/' className='nav-item'>
+              <svg className='nav-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor'>
+                <path d='M4 6h16M4 12h16M4 18h7' strokeWidth='2' strokeLinecap='round' />
+              </svg>
+              <span className='nav-label'>Summary</span>
+            </Link>
+            <Link to='/chat' className='nav-item active'>
+              <svg className='nav-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor'>
+                <path d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' strokeWidth='2' />
+              </svg>
+              <span className='nav-label'>Live Suggestions</span>
+            </Link>
+          </nav>
         </div>
       ) : (
         <>

@@ -66,7 +66,6 @@ body {
 }
 
 .content-wrapper {
-  margin-top: 40px;
   padding: 16px;
   height: calc(100vh - 64px);
   overflow-y: auto;
@@ -592,7 +591,7 @@ body {
 
 .content-wrapper {
   height: calc(100vh - 120px); /* Adjust for header and bottom nav */
-  padding: 16px;
+  padding: 12px;
   overflow-y: auto;
   margin-bottom: 0; /* Remove the existing margin */
   padding-bottom: 16px; /* Adjust padding */
@@ -680,7 +679,6 @@ h2 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
