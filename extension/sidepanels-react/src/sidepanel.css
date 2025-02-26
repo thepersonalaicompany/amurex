@@ -605,6 +605,8 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   margin-bottom: 16px;
+  background: #09090B;
+  overflow: hidden;
 }
 
 #meeting-summary.card,
@@ -653,10 +655,11 @@ body {
 .action-btn.purple {
   background: #9334e9;
   border: none;
+  color: white;
 }
 
 .action-btn.purple:hover {
-  background: #9334e9;
+  background: #8429D8;
 }
 
 .action-btn svg {
@@ -677,8 +680,15 @@ h2 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-left: 12px;
-  padding-right: 12px;
+  padding: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.section-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .section-actions {
@@ -738,7 +748,7 @@ h2 {
 }
 
 .dropdown-arrow {
-  margin-left: 4px;
+  margin-left: auto;
   transition: transform 0.2s;
 }
 
@@ -751,7 +761,7 @@ h2 {
   top: calc(100% + 4px);
   left: 0;
   right: 0;
-  background: #18181b;
+  background: #09090B;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 4px;
@@ -791,7 +801,7 @@ h2 {
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .black-btn {
@@ -799,10 +809,10 @@ h2 {
   align-items: center;
   gap: 6px;
   padding: 8px 10px;
-  background: #18181b;
-  border: 1px solid #27272a;
+  background: #09090B;
+  border: 1px solid #27272A;
   border-radius: 8px;
-  color: #fafafa;
+  color: #FAFAFA;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -810,7 +820,7 @@ h2 {
 }
 
 .black-btn:hover {
-  background: #27272a;
+  background: #27272A;
 }
 
 .black-btn svg {
