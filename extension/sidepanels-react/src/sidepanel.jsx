@@ -14,6 +14,7 @@ const Sidepanel = ({ setRoute, setMeetingId }) => {
   const summaryRef = useRef(null);
   const actionItemsRef = useRef(null);
   const copyDropdownRef = useRef(null);
+  const exportDropdownRef = useRef(null);
 
   const AMUREX_CONFIG = {
     BASE_URL_BACKEND: "https://api.amurex.ai",
@@ -498,6 +499,60 @@ const Sidepanel = ({ setRoute, setMeetingId }) => {
     }
   };
 
+  const toggleExportDropdown = () => {
+    setCopyDropdownActive(!copyDropdownActive);
+  };
+
+  const handleCopyToClipboard = () => {
+    // Combine summary and action items
+    const summaryText = summaryRef.current ? summaryRef.current.innerText : '';
+    const actionItemsText = actionItemsRef.current ? actionItemsRef.current.innerText : '';
+    
+    const combinedText = `# Meeting Summary\n\n${summaryText}\n\n# Action Items\n\n${actionItemsText}`;
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(combinedText).then(() => {
+      // Show feedback
+      const feedbackEl = document.createElement("div");
+      feedbackEl.className = "copy-feedback";
+      feedbackEl.textContent = "Copied to clipboard!";
+      document.body.appendChild(feedbackEl);
+
+      setTimeout(() => {
+        feedbackEl.remove();
+      }, 2000);
+      
+      // Close dropdown
+      setCopyDropdownActive(false);
+    });
+  };
+
+  const handleExportToApps = () => {
+    // This would typically open another dropdown or modal with app options
+    // For now, we'll just close the dropdown
+    setCopyDropdownActive(false);
+    
+    // Open export options in the web app
+    chrome.tabs.create({
+      url: `${AMUREX_CONFIG.BASE_URL_WEB}/export`,
+      active: true,
+    });
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exportDropdownRef.current && !exportDropdownRef.current.contains(event.target)) {
+        setCopyDropdownActive(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
     <div>
       <div
@@ -625,48 +680,62 @@ const Sidepanel = ({ setRoute, setMeetingId }) => {
         <div className='content-wrapper'>
           {/* Export Notes Button */}
           <div className='button-group'>
-            <div className='dropdown'>
-              <button id='export-button' className='black-btn'>
-                <svg
-                  width='20'
-                  height='20'
-                  viewBox='0 0 24 24'
-                  fill='none'
-                  xmlns='http://www.w3.org/2000/svg'
-                >
-                  <path
-                    d='M8 4V16C8 17.1046 8.89543 18 10 18H18C19.1046 18 20 17.1046 20 16V7.24853C20 6.77534 19.7893 6.32459 19.4142 6.00001L16.9983 3.75735C16.6232 3.43277 16.1725 3.22205 15.6993 3.22205H10C8.89543 3.22205 8 4.11748 8 5.22205'
-                    stroke='currentColor'
-                    strokeWidth='1.5'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                  />
-                  <path
-                    d='M16 18V20C16 21.1046 15.1046 22 14 22H6C4.89543 22 4 21.1046 4 20V9C4 7.89543 4.89543 7 6 7H8'
-                    stroke='currentColor'
-                    strokeWidth='1.5'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                  />
-                </svg>
-                Export Notes
+            <div className={`dropdown ${copyDropdownActive ? 'active' : ''}`} ref={exportDropdownRef}>
+              <button id='export-button' className='black-btn' onClick={toggleExportDropdown}>
+                <span>Export Notes</span>
                 <svg
                   className='dropdown-arrow'
-                  width='12'
-                  height='12'
+                  width='16'
+                  height='16'
                   viewBox='0 0 24 24'
                   fill='none'
-                  xmlns='http://www.w3.org/2000/svg'
+                  stroke='currentColor'
                 >
                   <path
                     d='M6 9L12 15L18 9'
-                    stroke='currentColor'
                     strokeWidth='2'
                     strokeLinecap='round'
                     strokeLinejoin='round'
                   />
                 </svg>
               </button>
+              <div className='dropdown-menu'>
+                <button id='copy-to-clipboard' className='dropdown-item' onClick={handleCopyToClipboard}>
+                  <svg
+                    width='16'
+                    height='16'
+                    viewBox='0 0 24 24'
+                    fill='none'
+                    stroke='currentColor'
+                  >
+                    <path
+                      d='M8 4V16C8 17.1046 8.89543 18 10 18H18C19.1046 18 20 17.1046 20 16V7.24853C20 6.77534 19.7893 6.32459 19.4142 6.00001L16.9983 3.75735C16.6232 3.43277 16.1725 3.22205 15.6993 3.22205H10C8.89543 3.22205 8 4.11748 8 5.22205'
+                      stroke='currentColor'
+                      strokeWidth='1.5'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                    />
+                  </svg>
+                  <span>Copy to clipboard</span>
+                </button>
+                <button id='share-to-apps' className='dropdown-item' onClick={handleExportToApps}>
+                  <svg
+                    width='16'
+                    height='16'
+                    viewBox='0 0 24 24'
+                    fill='none'
+                    stroke='currentColor'
+                  >
+                    <path
+                      d='M18 8A3 3 0 1 0 15 5m3 3v8M6 15a3 3 0 1 0 3 3m-3-3V8m6 4a3 3 0 1 0 0-6 3 3 0 0 0 0 6z'
+                      strokeWidth='2'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                    />
+                  </svg>
+                  <span>Export to apps</span>
+                </button>
+              </div>
             </div>
 
             <button className='action-btn purple'>
