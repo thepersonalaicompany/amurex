@@ -112,15 +112,129 @@
 }
 
 .content-wrapper {
-  height: calc(100vh - 120px); /* Adjust for header and bottom nav */
+  margin-top: 45px;
   padding: 16px;
+  height: calc(100vh - 120px);
   overflow-y: auto;
 }
 
 .section {
-  height: 100%;
+  background: #09090B;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  height: 75vh;
+}
+
+.section h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.upload-description {
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0 0 24px 0;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.ideas-heading {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 24px 0 12px 0;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.ideas-list {
+  list-style-type: disc;
+  padding-left: 24px;
+  margin: 0 0 32px 0;
+}
+
+.ideas-list li {
+  font-size: 16px;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 8px;
+}
+
+.file-upload-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #9334E9;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  transition: background 0.2s;
+  height: 48px;
+  margin-bottom: 12px;
+}
+
+.file-upload-label:hover {
+  background: #8429D8;
+}
+
+.supported-files {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  margin: 8px 0 0 0;
+}
+
+#file-input {
+  display: none;
+}
+
+/* Styling for the upload status */
+#upload-status {
+  margin-top: 16px;
+  text-align: center;
+}
+
+/* Styling for the bottom navigation */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: #09090B;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px 16px;
+}
+
+.nav-item {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  gap: 4px;
+  min-width: 64px;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.nav-item.active {
+  color: #9334E9;
+  background: rgba(147, 51, 234, 0.1);
 }
 
 .card {
@@ -128,51 +242,71 @@
   overflow-y: auto;
 }
 
+.action-btn-2 {
+  width: 100%;
+  padding: 8px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  background: #09090b;
+  color: #fafafa;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  border: none;
+}
+
+
 .upload-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 12px;
+  padding: 16px;
+  background: #09090B;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  margin-bottom: 16px;
 }
 
-.file-input {
-  display: none;
+.upload-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: rgba(255, 255, 255, 0.9);
 }
 
-.upload-button {
+.upload-btn {
+  margin-bottom: 12px;
+  height: 48px;
+  font-size: 16px;
+}
+
+.upload-success, .upload-error {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #9334E9;
-  color: white;
-  padding: 12px 24px;
+  margin-top: 16px;
+  padding: 12px;
   border-radius: 8px;
-  cursor: pointer;
-  font-family: "Inter", sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  transition: background 0.2s;
 }
 
-.upload-button:hover {
-  background: #9334E9;
+.upload-success {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22C55E;
+}
+
+.upload-error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
 }
 
 .upload-hint {
   color: #666;
   font-size: 12px;
   margin: 0;
-}
-
-.section {
-  padding-left: 12px;
-  padding-right: 12px;
-}
-
-.upload-status {
-  margin-top: 16px;
-  text-align: center;
-  font-size: 14px;
 }
 
 .upload-progress {
@@ -189,7 +323,6 @@
   background: #c76dcc;
   transition: width 0.3s ease;
 }
-
 
 .call-type-container {
   display: flex;
