@@ -528,15 +528,90 @@ const Sidepanel = ({ setRoute, setMeetingId }) => {
   };
 
   const handleExportToApps = () => {
-    // This would typically open another dropdown or modal with app options
-    // For now, we'll just close the dropdown
     setCopyDropdownActive(false);
-    
-    // Open export options in the web app
-    chrome.tabs.create({
-      url: `${AMUREX_CONFIG.BASE_URL_WEB}/export`,
-      active: true,
-    });
+
+    const meetingId = window.location.href.includes("meetingId=")
+      ? window.location.href.split("meetingId=")[1].split("&")[0]
+      : "unknown";
+
+    chrome.runtime.sendMessage(
+      {
+        action: "getUserId",
+      },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          console.error("Error getting user id:", chrome.runtime.lastError);
+          return;
+        }
+
+        const userId = response.userId;
+
+        if (AMUREX_CONFIG.ANALYTICS_ENABLED) {
+          fetch(`${AMUREX_CONFIG.BASE_URL_BACKEND}/track`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              uuid: userId,
+              meeting_id: meetingId,
+              event_type: "share_to_apps",
+            }),
+          }).catch((error) => {
+            console.error("Error tracking share:", error);
+          });
+        }
+
+        const actionItems = document.getElementById("action-items").innerText;
+        const meetingSummary = document.getElementById("meeting-summary").innerText;
+
+        const cleanActionItems = actionItems
+          .split("\n")
+          .filter((item) => item.trim() && !item.startsWith("#"))
+          .map((line) => {
+            if (line.match(/^[*-]/)) {
+              return line.replace(/^[*-]+\s*/, "- [ ] ").trim();
+            }
+            return `- [ ] ${line.trim()}`;
+          })
+          .join("\n");
+
+        const cleanSummary = meetingSummary
+          .split("\n")
+          .filter((line) => line.trim() && !line.startsWith("#"))
+          .map((line) => {
+            if (line.match(/^[*-]/)) {
+              return line.replace(/^([*-]+)\s*/, "$1 ").trim();
+            }
+            return line.trim();
+          })
+          .join("\n");
+
+        const markdownText = `## Action Items\n${cleanActionItems}\n\n## Meeting Summary\n${cleanSummary}`;
+
+        const shareOptions = {
+          text: markdownText,
+          title: "Meeting Notes",
+        };
+
+        if (navigator.canShare && navigator.canShare(shareOptions)) {
+          navigator
+            .share(shareOptions)
+            .then(() => {
+              console.log("Shared successfully");
+              copyDropdown.classList.remove("active");
+            })
+            .catch((error) => {
+              if (error.name !== "AbortError") {
+                console.error("Error sharing:", error);
+              }
+            });
+        } else {
+          alert("Web Share API is not supported in your browser");
+        }
+      }
+    );
   };
 
   // Close dropdown when clicking outside
@@ -682,6 +757,21 @@ const Sidepanel = ({ setRoute, setMeetingId }) => {
           <div className='button-group'>
             <div className={`dropdown ${copyDropdownActive ? 'active' : ''}`} ref={exportDropdownRef}>
               <button id='export-button' className='black-btn' onClick={toggleExportDropdown}>
+                <svg
+                  width='16'
+                  height='16'
+                  viewBox='0 0 24 24'
+                  fill='none'
+                  stroke='currentColor'
+                >
+                  <path
+                    d='M8 4V16C8 17.1046 8.89543 18 10 18H18C19.1046 18 20 17.1046 20 16V7.24853C20 6.77534 19.7893 6.32459 19.4142 6.00001L16.9983 3.75735C16.6232 3.43277 16.1725 3.22205 15.6993 3.22205H10C8.89543 3.22205 8 4.11748 8 5.22205'
+                    stroke='currentColor'
+                    strokeWidth='1.5'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                  />
+                </svg>
                 <span>Export Notes</span>
                 <svg
                   className='dropdown-arrow'
@@ -738,7 +828,7 @@ const Sidepanel = ({ setRoute, setMeetingId }) => {
               </div>
             </div>
 
-            <button className='action-btn purple'>
+            <button className='action-btn purple' onClick={() => chrome.runtime.sendMessage({ type: "download" })}>
               <svg
                 width='20'
                 height='20'

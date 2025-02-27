@@ -86,12 +86,15 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
       console.log("Meeting ended flag set");
     });
     // deleteKeysFromStorage();
-  } else if (
+  }
+  else if (
     message.type === "open_side_panel" ||
     message.type === "open_late_meeting_side_panel" ||
     message.type === "open_file_upload_panel"
   ) {
-    chrome.storage.local.set({ redirectPath: "open_file_upload_panel" });
+    if (message.type !== "open_side_panel") {
+      chrome.storage.local.set({ redirectPath: message.type });
+    }
 
     const pathMap = {
       open_side_panel: "sidepanels-react/dist/index.html",
