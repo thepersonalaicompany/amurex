@@ -59,6 +59,10 @@ let hasMeetingEnded = false;
 
 let extensionStatusJSON;
 
+// Add these variables at the top with other global variables
+let speakerObservers = new Map(); // Track observers for each speaker
+let activeSpeakerBuffers = new Map(); // Buffer for each active speaker's transcript
+
 checkExtensionStatus().then(() => {
   // Read the status JSON
   chrome.storage.local.get(["extensionStatusJSON"], function (result) {
@@ -528,11 +532,14 @@ function meetingRoutines(uiType) {
         // transcriptTargetNode.style.position = "absolute";
         // console.log(transcriptTargetNode);
 
-        // Create transcript observer instance linked to the callback function. Registered irrespective of operation mode, so that any visible transcript can be picked up during the meeting, independent of the operation mode.
+        // Create transcript observer instance linked to the callback function
         const transcriptObserver = new MutationObserver(transcriber);
 
-        // Start observing the transcript element and chat messages element for configured mutations
-        transcriptObserver.observe(transcriptTargetNode, mutationConfig);
+        // Start observing the transcript container for new speakers
+        transcriptObserver.observe(transcriptTargetNode, {
+          childList: true,
+          subtree: true
+        });
 
         // **** CHAT MESSAGES ROUTINES **** //
         const chatMessagesButton = contains(".google-symbols", "chat")[0];
@@ -923,178 +930,102 @@ const commonCSS = `background: rgb(255 255 255 / 10%);
 
 // Callback function to execute when transcription mutations are observed.
 function transcriber(mutationsList, observer) {
-  // Delay for 1000ms to allow for text corrections by Meet.
   mutationsList.forEach((mutation) => {
     try {
-      // CRITICAL DOM DEPENDENCY. Get all people in the transcript
-      let people =
-        document.querySelector(".a4cQT")?.childNodes[1]?.firstChild
-          ?.childNodes ||
-        document.querySelector(".a4cQT")?.firstChild?.firstChild?.childNodes || 
+      // Check for new speaker divs
+      mutation.addedNodes.forEach((node) => {
+        if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('nMcdL')) {
+          const speakerId = Date.now(); // Unique ID for this speaker instance
+          const speakerName = node.querySelector(".KcIKyf").textContent.trim();
+          const captionsDiv = node.querySelector(".bh44bd");
 
-      console.log("people", people, document.querySelectorAll(".nMcdL"));
+          // Initialize buffer for this speaker
+          activeSpeakerBuffers.set(speakerId, {
+            name: speakerName,
+            startTime: new Date().toLocaleString("default", timeFormat).toUpperCase(),
+            text: captionsDiv.textContent.trim()
+          });
 
-      let people_ui2 = document.querySelectorAll(".nMcdL");
-
-      // Begin parsing transcript
-      if (people.length > 0) {
-        // Get the last person
-        const person = people[people.length - 1];
-        console.log("person", person);
-        // CRITICAL DOM DEPENDENCY
-        const currentPersonName = person.childNodes[0].textContent;
-        console.log("currentPersonName", currentPersonName);
-        // CRITICAL DOM DEPENDENCY
-        const currentTranscriptText =
-          person.childNodes[1].lastChild.textContent;
-
-        
-
-        // Starting fresh in a meeting or resume from no active transcript
-        if (beforeTranscriptText == "") {
-          personNameBuffer = currentPersonName;
-          timeStampBuffer = new Date()
-            .toLocaleString("default", timeFormat)
-            .toUpperCase();
-          beforeTranscriptText = currentTranscriptText;
-          transcriptTextBuffer = currentTranscriptText;
-        }
-        // Some prior transcript buffer exists
-        else {
-          // New person started speaking
-          if (personNameBuffer != currentPersonName) {
-            // Push previous person's transcript as a block
-            pushBufferToTranscript();
-            overWriteChromeStorage(["transcript"], false);
-
-            // Send WebSocket message
-            if (ws && ws.readyState === WebSocket.OPEN) {
-              const formattedPayload = `${personNameBuffer} (${timeStampBuffer})\n${transcriptTextBuffer}\n`;
-              ws.send(
-                JSON.stringify({
-                  type: "transcript_update",
-                  data: formattedPayload,
-                })
-              );
+          // Create observer for this speaker's captions
+          const captionsObserver = new MutationObserver((captionsMutations) => {
+            const speakerBuffer = activeSpeakerBuffers.get(speakerId);
+            if (speakerBuffer) {
+              speakerBuffer.text = captionsDiv.textContent.trim();
+              
+              // If caption length is too long, process it
+              if (speakerBuffer.text.length > 250) {
+                processSpeakerTranscript(speakerId);
+              }
             }
+          });
 
-            // Update buffers for next mutation and store transcript block timeStamp
-            beforeTranscriptText = currentTranscriptText;
-            personNameBuffer = currentPersonName;
-            timeStampBuffer = new Date()
-              .toLocaleString("default", timeFormat)
-              .toUpperCase();
-            transcriptTextBuffer = currentTranscriptText;
-          }
-          // Same person speaking more
-          else {
-            transcriptTextBuffer = currentTranscriptText;
-            // Update buffers for next mutation
-            beforeTranscriptText = currentTranscriptText;
-            // If a person is speaking for a long time, Google Meet does not keep the entire text in the spans. Starting parts are automatically removed in an unpredictable way as the length increases and Amurex will miss them. So we force remove a lengthy transcript node in a controlled way. Google Meet will add a fresh person node when we remove it and continue transcription. Amurex picks it up as a new person and nothing is missed.
-            if (currentTranscriptText.length > 250) person.remove();
-          }
+          // Start observing this speaker's captions
+          captionsObserver.observe(captionsDiv, {
+            childList: true,
+            characterData: true,
+            subtree: true
+          });
+
+          speakerObservers.set(speakerId, captionsObserver);
+
+          // Set timeout to process this speaker's transcript if they stop talking
+          setTimeout(() => {
+            processSpeakerTranscript(speakerId);
+          }, 5000);
         }
-      }
+      });
 
-      // No people found in transcript DOM
-      else if (people_ui2.length > 0) {
-                // Get the last person
-                people = document.querySelectorAll(".nMcdL");
-                const person = people[people.length - 1];
-                console.log("person", person);
-                // CRITICAL DOM DEPENDENCY
-                const currentPersonName = person.childNodes[0].textContent;
-                console.log("currentPersonName", currentPersonName);
-                // CRITICAL DOM DEPENDENCY
-                const currentTranscriptText =
-                  person.childNodes[1].lastChild.textContent;
-                  console.log("currentTranscriptText", currentTranscriptText);
-        
-                
-        
-                // Starting fresh in a meeting or resume from no active transcript
-                if (beforeTranscriptText == "") {
-                  personNameBuffer = currentPersonName;
-                  timeStampBuffer = new Date()
-                    .toLocaleString("default", timeFormat)
-                    .toUpperCase();
-                  beforeTranscriptText = currentTranscriptText;
-                  transcriptTextBuffer = currentTranscriptText;
-                }
-                // Some prior transcript buffer exists
-                else {
-                  // New person started speaking
-                  if (personNameBuffer != currentPersonName) {
-                    // Push previous person's transcript as a block
-                    pushBufferToTranscript();
-                    overWriteChromeStorage(["transcript"], false);
-        
-                    // Send WebSocket message
-                    if (ws && ws.readyState === WebSocket.OPEN) {
-                      const formattedPayload = `${personNameBuffer} (${timeStampBuffer})\n${transcriptTextBuffer}\n`;
-                      ws.send(
-                        JSON.stringify({
-                          type: "transcript_update",
-                          data: formattedPayload,
-                        })
-                      );
-                    }
-        
-                    // Update buffers for next mutation and store transcript block timeStamp
-                    beforeTranscriptText = currentTranscriptText;
-                    personNameBuffer = currentPersonName;
-                    timeStampBuffer = new Date()
-                      .toLocaleString("default", timeFormat)
-                      .toUpperCase();
-                    transcriptTextBuffer = currentTranscriptText;
-                  }
-                  // Same person speaking more
-                  else {
-                    transcriptTextBuffer = currentTranscriptText;
-                    // Update buffers for next mutation
-                    beforeTranscriptText = currentTranscriptText;
-                    // If a person is speaking for a long time, Google Meet does not keep the entire text in the spans. Starting parts are automatically removed in an unpredictable way as the length increases and Amurex will miss them. So we force remove a lengthy transcript node in a controlled way. Google Meet will add a fresh person node when we remove it and continue transcription. Amurex picks it up as a new person and nothing is missed.
-                    if (currentTranscriptText.length > 250) person.remove();
-                  }
-                }
-      }
-      else {
-        // No transcript yet or the last person stopped speaking(and no one has started speaking next)
-        console.log("No active transcript");
-        // Push data in the buffer variables to the transcript array, but avoid pushing blank ones.
-        if (personNameBuffer != "" && transcriptTextBuffer != "") {
-          pushBufferToTranscript();
-          overWriteChromeStorage(["transcript"], false);
-
-          // Send WebSocket message
-          if (ws && ws.readyState === WebSocket.OPEN) {
-            const formattedPayload = `${personNameBuffer} (${timeStampBuffer})\n${transcriptTextBuffer}\n`;
-            ws.send(
-              JSON.stringify({
-                type: "transcript_update",
-                data: formattedPayload,
-              })
-            );
-          }
+      // Check for removed speaker divs
+      mutation.removedNodes.forEach((node) => {
+        if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('nMcdL')) {
+          // Process any remaining transcripts for removed speakers
+          speakerObservers.forEach((observer, speakerId) => {
+            processSpeakerTranscript(speakerId);
+          });
         }
-        // Update buffers for the next person in the next mutation
-        beforePersonName = "";
-        beforeTranscriptText = "";
-        personNameBuffer = "";
-        transcriptTextBuffer = "";
-      }
+      });
     } catch (error) {
-      if (isTranscriptDomErrorCaptured == false && hasMeetingEnded == false) {
-        chrome.storage.local.set({ meetingQA: [] }, function () {
-          console.log("Meeting QA cleared due to error");
-        });
-        console.log(reportErrorMessage);
+      if (!isTranscriptDomErrorCaptured && !hasMeetingEnded) {
+        console.error("Transcript observer error:", error);
+        chrome.storage.local.set({ meetingQA: [] });
         showNotification(extensionStatusJSON_bug);
+        isTranscriptDomErrorCaptured = true;
       }
-      isTranscriptDomErrorCaptured = true;
     }
   });
+}
+
+function processSpeakerTranscript(speakerId) {
+  const speakerBuffer = activeSpeakerBuffers.get(speakerId);
+  if (speakerBuffer && speakerBuffer.text.trim()) {
+    // Push to transcript array
+    transcript.push({
+      personName: speakerBuffer.name,
+      timeStamp: speakerBuffer.startTime,
+      personTranscript: speakerBuffer.text
+    });
+
+    // Save to storage
+    overWriteChromeStorage(["transcript"], false);
+
+    // Send via WebSocket if connected
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      const formattedPayload = `${speakerBuffer.name} (${speakerBuffer.startTime})\n${speakerBuffer.text}\n`;
+      ws.send(JSON.stringify({
+        type: "transcript_update",
+        data: formattedPayload,
+      }));
+    }
+
+    // Cleanup
+    const observer = speakerObservers.get(speakerId);
+    if (observer) {
+      observer.disconnect();
+      speakerObservers.delete(speakerId);
+    }
+    console.log("activeSpeakerBuffers", activeSpeakerBuffers);
+    activeSpeakerBuffers.delete(speakerId);
+  }
 }
 
 // Callback function to execute when chat messages mutations are observed.
