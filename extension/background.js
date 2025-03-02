@@ -369,10 +369,9 @@ function downloadTranscript() {
         let fileName;
 
         if (pltprop === "msteams") {
-          fileName =
-          result.meetingStartTimeStamp
-            ? `Amurex/Transcript | MS Teams meeting at ${result.meetingStartTimeStamp}.txt`
-            : `Amurex/Transcript.txt`;
+          fileName = result.meetingStartTimeStamp
+            ? `Amurex_Transcript_MS_Teams_${result.meetingStartTimeStamp.replace(/[/:,\s|]/g, '_')}.txt`
+            : `Amurex_Transcript_MS_Teams.txt`;
 
           const uniqueMessages = Object.entries(result.transcript).reduce((acc, [key, value]) => {
             if (key === 'transcript' && Array.isArray(value)) {
@@ -412,11 +411,9 @@ function downloadTranscript() {
 
           console.log("MS Teams transcript:", textContent);
         } else {
-
-          fileName =
-          result.meetingTitle && result.meetingStartTimeStamp
-            ? `Amurex/Transcript | Google Meet at ${result.meetingStartTimeStamp}.txt`
-            : `Amurex/Transcript.txt`;
+          fileName = result.meetingStartTimeStamp
+            ? `Amurex_Transcript_Google_Meet_${result.meetingStartTimeStamp.replace(/[/:,\s|]/g, '_')}.txt`
+            : `Amurex_Transcript_Google_Meet.txt`;
 
           // Create an array to store lines of the text file
           const lines = [];
@@ -446,10 +443,9 @@ function downloadTranscript() {
             lines.push("");
           }
 
-          // Join the lines into a single string, replace "You" with userName from storage
+          // Join the lines into a single string
           textContent = lines
-            .join("\n")
-            .replace(/You \(/g, result.userName + " (");
+            .join("\n");
 
           console.log("Regular transcript:", textContent);
         }
