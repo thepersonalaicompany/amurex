@@ -116,9 +116,6 @@ function setupWebSocket() {
       }
 
       const userId = response.userId;
-      console.log("User ID:", userId);
-      console.log("Meeting ID:", meetingId);
-
       const setMeetingId = async (mId) => {
         return new Promise((resolve, reject) => {
           chrome.storage.local.set({ mId }, () => {
@@ -132,7 +129,7 @@ function setupWebSocket() {
 
       (async () => {
         try {
-          const result = await setMeetingId(meetingId); // Replace '12345' with your desired meeting ID
+          const result = await setMeetingId(meetingId);
           console.log(result);
         } catch (error) {
           console.error("Error setting Meeting ID:", error);
