@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/7ac42ba6-bf95-4d1b-b211-59630401deaa" alt="Amurex Logo" width="800" />
+  <img src="https://github.com/user-attachments/assets/d06d31c3-ff8c-4f57-9c85-c33afc9d9ef9" alt="Amurex Logo" width="800" />
 
   <h2>Your AI Copilot for Work + Life</h2>
 
