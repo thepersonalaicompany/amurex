@@ -420,22 +420,31 @@ function showNotification(extensionStatusJSON) {
   // Banner CSS
   let html = document.querySelector("html");
   let obj = document.createElement("div");
+  let topRow = document.createElement("div");
   let logo = document.createElement("img");
+  let closeBtn = document.createElement("button");
   let text = document.createElement("p");
 
   // Style the container
   obj.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 50%;
-        transform: translateX(50%);
-        background: black;
-        padding: 20px;
-        border-radius: 8px;
-        z-index: 10000;
-        width: 400px;
-        font-family: "Host Grotesk", sans-serif;
-      `;
+      position: fixed;
+      top: 20px;
+      right: 50%;
+      transform: translateX(50%);
+      background: black;
+      padding: 20px;
+      border-radius: 8px;
+      z-index: 10000;
+      width: 400px;
+      font-family: "Host Grotesk", sans-serif;
+    `;
+
+  // Create top row with logo and close button
+  topRow.style.cssText = `
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    `;
 
   // Style logo
   logo.setAttribute(
@@ -446,11 +455,32 @@ function showNotification(extensionStatusJSON) {
   logo.setAttribute("width", "32px");
   logo.style.cssText = "border-radius: 4px";
 
+  // Style close button
+  closeBtn.innerHTML = "✕";
+  closeBtn.style.cssText = `
+      background: transparent;
+      color: white;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 5px;
+      opacity: 0.7;
+    `;
+  closeBtn.onmouseover = function () {
+    this.style.opacity = "1";
+  };
+  closeBtn.onmouseout = function () {
+    this.style.opacity = "0.7";
+  };
+  closeBtn.onclick = function () {
+    obj.style.display = "none";
+  };
+
   // Style text
   text.style.cssText = `
-        color: ${extensionStatusJSON.status === 200 ? "#fff" : "#c76dcc"};
-        margin: 10px 0;
-      `;
+      color: ${extensionStatusJSON.status === 200 ? "#fff" : "#c76dcc"};
+      margin: 10px 0;
+    `;
   text.innerHTML = extensionStatusJSON.message;
 
   // Watch for the end button
@@ -464,7 +494,10 @@ function showNotification(extensionStatusJSON) {
     }
   }, 1000);
 
-  obj.appendChild(logo);
+  // Assemble the components
+  topRow.appendChild(logo);
+  topRow.appendChild(closeBtn);
+  obj.appendChild(topRow);
   obj.appendChild(text);
   if (html) html.append(obj);
 }

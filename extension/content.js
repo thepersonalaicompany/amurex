@@ -535,7 +535,7 @@ function meetingRoutines(uiType) {
         // Start observing the transcript container for new speakers
         transcriptObserver.observe(transcriptTargetNode, {
           childList: true,
-          subtree: true
+          subtree: true,
         });
 
         // **** CHAT MESSAGES ROUTINES **** //
@@ -676,7 +676,9 @@ function showNotification(extensionStatusJSON) {
   // Banner CSS
   let html = document.querySelector("html");
   let obj = document.createElement("div");
+  let topRow = document.createElement("div");
   let logo = document.createElement("img");
+  let closeBtn = document.createElement("button");
   let text = document.createElement("p");
 
   // Style the container
@@ -693,6 +695,13 @@ function showNotification(extensionStatusJSON) {
       font-family: "Host Grotesk", sans-serif;
     `;
 
+  // Create top row with logo and close button
+  topRow.style.cssText = `
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    `;
+
   // Style logo
   logo.setAttribute(
     "src",
@@ -701,6 +710,27 @@ function showNotification(extensionStatusJSON) {
   logo.setAttribute("height", "32px");
   logo.setAttribute("width", "32px");
   logo.style.cssText = "border-radius: 4px";
+
+  // Style close button
+  closeBtn.innerHTML = "✕";
+  closeBtn.style.cssText = `
+      background: transparent;
+      color: white;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 5px;
+      opacity: 0.7;
+    `;
+  closeBtn.onmouseover = function () {
+    this.style.opacity = "1";
+  };
+  closeBtn.onmouseout = function () {
+    this.style.opacity = "0.7";
+  };
+  closeBtn.onclick = function () {
+    obj.style.display = "none";
+  };
 
   // Style text
   text.style.cssText = `
@@ -720,7 +750,10 @@ function showNotification(extensionStatusJSON) {
     }
   }, 1000);
 
-  obj.appendChild(logo);
+  // Assemble the components
+  topRow.appendChild(logo);
+  topRow.appendChild(closeBtn);
+  obj.appendChild(topRow);
   obj.appendChild(text);
   if (html) html.append(obj);
 }
@@ -931,7 +964,10 @@ function transcriber(mutationsList, observer) {
     try {
       // Check for new speaker divs
       mutation.addedNodes.forEach((node) => {
-        if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('nMcdL')) {
+        if (
+          node.nodeType === Node.ELEMENT_NODE &&
+          node.classList.contains("nMcdL")
+        ) {
           const speakerId = Date.now(); // Unique ID for this speaker instance
           const speakerName = node.querySelector(".KcIKyf").textContent.trim();
           const captionsDiv = node.querySelector(".bh44bd");
@@ -939,8 +975,10 @@ function transcriber(mutationsList, observer) {
           // Initialize buffer for this speaker
           activeSpeakerBuffers.set(speakerId, {
             name: speakerName,
-            startTime: new Date().toLocaleString("default", timeFormat).toUpperCase(),
-            text: captionsDiv.textContent.trim()
+            startTime: new Date()
+              .toLocaleString("default", timeFormat)
+              .toUpperCase(),
+            text: captionsDiv.textContent.trim(),
           });
 
           // Create observer for this speaker's captions
@@ -948,7 +986,7 @@ function transcriber(mutationsList, observer) {
             const speakerBuffer = activeSpeakerBuffers.get(speakerId);
             if (speakerBuffer) {
               speakerBuffer.text = captionsDiv.textContent.trim();
-              
+
               // If caption length is too long, process it
               if (speakerBuffer.text.length > 250) {
                 processSpeakerTranscript(speakerId);
@@ -960,7 +998,7 @@ function transcriber(mutationsList, observer) {
           captionsObserver.observe(captionsDiv, {
             childList: true,
             characterData: true,
-            subtree: true
+            subtree: true,
           });
 
           speakerObservers.set(speakerId, captionsObserver);
@@ -974,7 +1012,10 @@ function transcriber(mutationsList, observer) {
 
       // Check for removed speaker divs
       mutation.removedNodes.forEach((node) => {
-        if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('nMcdL')) {
+        if (
+          node.nodeType === Node.ELEMENT_NODE &&
+          node.classList.contains("nMcdL")
+        ) {
           // Process any remaining transcripts for removed speakers
           speakerObservers.forEach((observer, speakerId) => {
             processSpeakerTranscript(speakerId);
@@ -999,7 +1040,7 @@ function processSpeakerTranscript(speakerId) {
     transcript.push({
       personName: speakerBuffer.name,
       timeStamp: speakerBuffer.startTime,
-      personTranscript: speakerBuffer.text
+      personTranscript: speakerBuffer.text,
     });
 
     // Save to storage
@@ -1008,10 +1049,12 @@ function processSpeakerTranscript(speakerId) {
     // Send via WebSocket if connected
     if (ws && ws.readyState === WebSocket.OPEN) {
       const formattedPayload = `${speakerBuffer.name} (${speakerBuffer.startTime})\n${speakerBuffer.text}\n`;
-      ws.send(JSON.stringify({
-        type: "transcript_update",
-        data: formattedPayload,
-      }));
+      ws.send(
+        JSON.stringify({
+          type: "transcript_update",
+          data: formattedPayload,
+        })
+      );
     }
 
     // Cleanup
