@@ -21,7 +21,7 @@
 
 ## About Amurex
 
-This repo/chrome extension is the Meeting Copilot for Amurex—the fully open-source executive assistant. Built to seamlessly integrate with your workflow, it leverages cutting-edge AI to handle your meetings, capture important details, summarize discussions, and manage follow-up actions.
+This repo/chrome extension is the Meeting Copilot for Amurex—the fully open-source invisible companion for work and life. Built to seamlessly integrate with your workflow, it leverages cutting-edge AI to handle your meetings, capture important details, summarize discussions, and manage follow-up actions.
 
 As part of the broader Amurex ecosystem, this Meeting Copilot helps you streamline your productivity by automating busywork, enabling you to focus on what truly matters.
 
