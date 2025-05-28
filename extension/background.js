@@ -213,8 +213,10 @@ chrome.tabs.onRemoved.addListener(async function (tabid) {
     
     // Create new tab with platform-specific URL
     const redirectUrl = data.platform === "msteams" 
-      ? "https://teams.live.com/v2/"
-      : "https://meet.google.com/landing";
+        ? "https://teams.live.com/v2/"
+        : data.platform === "slack" 
+        ? "https://slack.com"
+        : "https://meet.google.com/landing";
       
     const newTab = await chrome.tabs.create({ url: redirectUrl });
 

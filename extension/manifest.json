@@ -24,6 +24,16 @@
         "https://teams.live.com/",
         "https://teams.microsoft.com/"
       ]
+    },
+    {
+      "js": ["slack.js"],
+      "run_at": "document_end",
+      "matches": ["https://*.slack.com/*"],
+      "exclude_matches": [
+        "https://slack.com/",
+        "https://*.slack.com/signin",
+        "https://*.slack.com/intro"
+      ]
     }
   ],
   "permissions": ["storage", "downloads", "sidePanel", "cookies", "scripting"],
