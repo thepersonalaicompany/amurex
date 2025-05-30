@@ -1,0 +1,46 @@
+{
+  "manifest_version": 2,
+  "name": "Amurex (Early Preview)",
+  "version": "1.0.20",
+  "description": "Your AI meeting Copilot",
+  "sidebar_action": {
+    "default_panel": "sidepanels/sidepanel.html",
+    "default_title": "Amurex"
+  },
+  "content_security_policy": "script-src 'self'; object-src 'self'",
+  "content_scripts": [
+    {
+      "js": ["content.js"],
+      "run_at": "document_end",
+      "matches": ["https://meet.google.com/*"],
+      "exclude_matches": ["https://meet.google.com/"]
+    }
+  ],
+  "permissions": [
+    "storage",
+    "downloads",
+    "cookies",
+    "https://meet.google.com/*",
+    "https://www.googleapis.com/*", 
+    "https://api.amurex.ai/*",
+    "https://app.amurex.ai/*",
+    "http://localhost:3000/*"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_action": {
+    "default_title": "Amurex",
+    "default_icon": {
+      "16": "icon.png",
+      "48": "icon.png",
+      "128": "icon.png"
+    }
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "amurex@amurex.ai",
+      "strict_min_version": "109.0"
+    }
+  }
+}
