@@ -883,7 +883,6 @@ function showNotificationContextual(extensionStatusJSON) {
   buttonContainer.style.cssText =
     "display: flex; justify-content: center; margin-top: 10px;";
 
-
   // Remove banner after 5s
   setTimeout(() => {
     obj.style.display = "none";

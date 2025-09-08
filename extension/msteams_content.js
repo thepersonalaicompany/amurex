@@ -535,6 +535,30 @@ function showNotificationContextual(extensionStatusJSON) {
   buttonContainer.style.cssText =
     "display: flex; justify-content: center; margin-top: 10px;";
 
+  // create open panel button for opening the Amurex side panel
+  let openPanelButton = document.createElement("button");
+  openPanelButton.textContent = "Open Panel";
+  openPanelButton.style.cssText = `
+  background: #2A9ACA;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: "Host Grotesk", sans-serif;
+  font-weight: 500;
+  margin: 0 5px;
+`;
+
+  // Add click handler for open panel button
+  openPanelButton.addEventListener("click", () => {
+    const meetingId = document.location.pathname.split("/")[1]?.split("?")[0];
+    if (meetingId) {
+      createAnimatedPanel(meetingId);
+    }
+    obj.remove();
+  });
+
   // Remove banner after 5s
   setTimeout(() => {
     obj.style.display = "none";
