@@ -669,8 +669,12 @@ function meetingRoutines(uiType) {
             }
           );
 
-          transcriptObserver.disconnect();
-          chatMessagesObserver.disconnect();
+          if (transcriptObserver) {
+            transcriptObserver.disconnect();
+          }
+          if (chatMessagesObserver) {
+            chatMessagesObserver.disconnect();
+          }
           checkStoredTranscripts();
 
           // Push any data in the buffer variables to the transcript array, but avoid pushing blank ones. Needed to handle one or more speaking when meeting ends.
