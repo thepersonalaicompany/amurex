@@ -22,6 +22,30 @@ const mutationConfig = { childList: true, attributes: true, subtree: true };
 
 const BASE_URL_BACKEND = "https://api.amurex.ai";
 
+// Centralized selector map for DOM dependencies
+const SELECTORS = {
+  username: `[style="text-overflow: ellipsis; overflow: hidden;"]`,
+  transcriptContainer: `[aria-label="Captions"]`,
+  meetingTitle: ".u6vdEc",
+  videoPreview: ".ZUpb4c",
+  chat: {
+    iconSelector: ".google-symbols",
+    iconText: "chat",
+    messagesContainer: 'div[aria-live="polite"]',
+  },
+  transcript: {
+    speakerContainer: ".nMcdL",
+    speakerName: ".KcIKyf",
+    captions: ".bh44bd",
+  },
+};
+
+// End button selector combos for different UI versions
+const END_BUTTON_SELECTORS = [
+  { selector: ".google-material-icons", text: "call_end" },
+  { selector: ".google-symbols", text: "call_end" },
+];
+
 // Name of the person attending the meeting
 let userName = "You";
 overWriteChromeStorage(["userName"], false);
@@ -72,10 +96,10 @@ checkExtensionStatus().then(() => {
     // Enable extension functions only if status is 200
     if (extensionStatusJSON.status == 200) {
       // NON CRITICAL DOM DEPENDENCY. Attempt to get username before meeting starts. Abort interval if valid username is found or if meeting starts and default to "You".
-      checkElement(".awLEm").then(() => {
+      checkElement(SELECTORS.username).then(() => {
         // Poll the element until the textContent loads from network or until meeting starts
         const captureUserNameInterval = setInterval(() => {
-          userName = document.querySelector(".awLEm").textContent;
+          userName = document.querySelector(SELECTORS.username).textContent;
           if (userName || hasMeetingStarted) {
             clearInterval(captureUserNameInterval);
             // Prevent overwriting default "You" where element is found, but valid userName is not available
@@ -375,7 +399,7 @@ function meetingRoutines(uiType) {
     text: "",
   };
 
-  const videoPreview = ".ZUpb4c";
+  const videoPreview = SELECTORS.videoPreview;
   // Different selector data for different UI versions
   switch (uiType) {
     case 1:
@@ -512,34 +536,65 @@ function meetingRoutines(uiType) {
         });
 
         // CRITICAL DOM DEPENDENCY. Grab the transcript element. This element is present, irrespective of captions ON/OFF, so this executes independent of operation mode.
-        const transcriptTargetNode = document.querySelector(".a4cQT");
-        // attempt one to dim down the transcript
-        if (transcriptTargetNode) {
-          transcriptTargetNode.style.position = "absolute";
-        }
+        // Use a retry mechanism since the transcript container might not be available immediately
+        const getTranscriptElement = () => {
+          const transcriptElements = document.querySelectorAll(
+            SELECTORS.transcriptContainer
+          );
+          console.log("transcriptElements: ", transcriptElements);
+          return transcriptElements.length > 0 ? transcriptElements[0] : null;
+        };
 
-        // Attempt to dim down the transcript
-        try {
-          // console.log("This is the transcriptTargetNode", transcriptTargetNode);
-          transcriptTargetNode.firstChild.style.opacity = 0.2;
-        } catch (error) {
-          console.error(error);
-        }
+        // Try to get the transcript element with retries
+        let transcriptTargetNode = getTranscriptElement();
+        let retryCount = 0;
+        const maxRetries = 10;
+        const retryDelay = 1000; // 1 second
 
-        // transcriptTargetNode.style.position = "absolute";
-        // console.log(transcriptTargetNode);
+        const waitForTranscriptElement = () => {
+          if (transcriptTargetNode) {
+            // attempt one to dim down the transcript
+            transcriptTargetNode.style.position = "absolute";
 
-        // Create transcript observer instance linked to the callback function
-        const transcriptObserver = new MutationObserver(transcriber);
+            // Attempt to dim down the transcript
+            try {
+              if (transcriptTargetNode.firstChild) {
+                transcriptTargetNode.firstChild.style.opacity = 0.2;
+              }
+            } catch (error) {
+              console.error("Error setting transcript opacity:", error);
+            }
 
-        // Start observing the transcript container for new speakers
-        transcriptObserver.observe(transcriptTargetNode, {
-          childList: true,
-          subtree: true,
-        });
+            // Create transcript observer instance linked to the callback function
+            // This must be done AFTER the element is found
+            const transcriptObserver = new MutationObserver(transcriber);
+
+            // Start observing the transcript container for new speakers
+            transcriptObserver.observe(transcriptTargetNode, {
+              childList: true,
+              subtree: true,
+            });
+          } else if (retryCount < maxRetries) {
+            retryCount++;
+            console.log(
+              `Transcript element not found, retrying... (${retryCount}/${maxRetries})`
+            );
+            setTimeout(() => {
+              transcriptTargetNode = getTranscriptElement();
+              waitForTranscriptElement();
+            }, retryDelay);
+          } else {
+            console.warn("Transcript element not found after maximum retries");
+          }
+        };
+
+        waitForTranscriptElement();
 
         // **** CHAT MESSAGES ROUTINES **** //
-        const chatMessagesButton = contains(".google-symbols", "chat")[0];
+        const chatMessagesButton = contains(
+          SELECTORS.chat.iconSelector,
+          SELECTORS.chat.iconText
+        )[0];
         // Force open chat messages to make the required DOM to appear. Otherwise, the required chatMessages DOM element is not available.
         chatMessagesButton.click();
         let chatMessagesObserver;
@@ -549,7 +604,7 @@ function meetingRoutines(uiType) {
           // CRITICAL DOM DEPENDENCY. Grab the chat messages element. This element is present, irrespective of chat ON/OFF, once it appears for this first time.
           try {
             const chatMessagesTargetNode = document.querySelectorAll(
-              'div[aria-live="polite"]'
+              SELECTORS.chat.messagesContainer
             )[0];
 
             // Create chat messages observer instance linked to the callback function. Registered irrespective of operation mode.
@@ -651,6 +706,17 @@ function contains(selector, text) {
   });
 }
 
+// Helper to detect the meeting end button across different UI versions
+function isMeetingEndButtonPresent() {
+  try {
+    return END_BUTTON_SELECTORS.some(
+      ({ selector, text }) => contains(selector, text).length > 0
+    );
+  } catch (e) {
+    return false;
+  }
+}
+
 // Efficiently waits until the element of the specified selector and textContent appears in the DOM. Polls only on animation frame change
 const checkElement = async (selector, text) => {
   if (text) {
@@ -741,8 +807,7 @@ function showNotification(extensionStatusJSON) {
 
   // Watch for the end button
   const checkEndButton = setInterval(() => {
-    const endButtonExists =
-      contains(meetingEndIconData.selector, meetingEndIconData.text).length > 0;
+    const endButtonExists = isMeetingEndButtonPresent();
 
     if (endButtonExists) {
       obj.style.display = "none";
@@ -842,8 +907,7 @@ function showNotificationLive() {
 
   // Watch for the end button
   const checkEndButton = setInterval(() => {
-    const endButtonExists =
-      contains(meetingEndIconData.selector, meetingEndIconData.text).length > 0;
+    const endButtonExists = isMeetingEndButtonPresent();
 
     if (endButtonExists) {
       obj.style.display = "none";
@@ -882,6 +946,30 @@ function showNotificationContextual(extensionStatusJSON) {
   // Style the button container
   buttonContainer.style.cssText =
     "display: flex; justify-content: center; margin-top: 10px;";
+
+  // create open panel button for opening the Amurex side panel
+  let openPanelButton = document.createElement("button");
+  openPanelButton.textContent = "Open Panel";
+  openPanelButton.style.cssText = `
+  background: #2A9ACA;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: "Host Grotesk", sans-serif;
+  font-weight: 500;
+  margin: 0 5px;
+`;
+
+  // Add click handler for open panel button
+  openPanelButton.addEventListener("click", () => {
+    const meetingId = document.location.pathname.split("/")[1]?.split("?")[0];
+    if (meetingId) {
+      createAnimatedPanel(meetingId);
+    }
+    obj.remove();
+  });
 
   // Remove banner after 5s
   setTimeout(() => {
@@ -933,11 +1021,52 @@ function transcriber(mutationsList, observer) {
       mutation.addedNodes.forEach((node) => {
         if (
           node.nodeType === Node.ELEMENT_NODE &&
-          node.classList.contains("nMcdL")
+          node.classList.contains(
+            SELECTORS.transcript.speakerContainer.slice(1)
+          )
         ) {
+          // Prefer extracting from the node's children array rather than classnames/ids
+          const headerDiv = node && node.children ? node.children[0] : null;
+          let captionsDiv = node && node.children ? node.children[1] : null;
+
+          console.log("captionsDiv: ", captionsDiv);
+          console.log("headerDiv: ", headerDiv);
+
+          // Fallback to selectors if direct children are not present
+          if (!captionsDiv) {
+            captionsDiv = node.querySelector(SELECTORS.transcript.captions);
+          }
+
+          // Derive speaker name by scanning text-bearing descendants of the headerDiv
+          let speakerName = "";
+          if (headerDiv) {
+            const descendants = headerDiv.querySelectorAll("*");
+            for (const el of descendants) {
+              const text = (el.textContent || "").trim();
+              if (text && text.toLowerCase() !== "flex") {
+                speakerName = text;
+                break;
+              }
+            }
+          }
+
+          // As a safety net, fallback to previous selector-based approach if needed
+          if (!speakerName) {
+            const speakerNameElement = node.querySelector(
+              SELECTORS.transcript.speakerName
+            );
+            if (speakerNameElement) {
+              speakerName = speakerNameElement.textContent.trim();
+            }
+          }
+
+          // Check if required elements exist before proceeding
+          if (!speakerName || !captionsDiv) {
+            return; // Skip this node if required elements are missing
+          }
+
           const speakerId = Date.now(); // Unique ID for this speaker instance
-          const speakerName = node.querySelector(".KcIKyf").textContent.trim();
-          const captionsDiv = node.querySelector(".bh44bd");
+          const captionsText = captionsDiv.textContent.trim();
 
           // Initialize buffer for this speaker
           activeSpeakerBuffers.set(speakerId, {
@@ -951,7 +1080,7 @@ function transcriber(mutationsList, observer) {
           // Create observer for this speaker's captions
           const captionsObserver = new MutationObserver((captionsMutations) => {
             const speakerBuffer = activeSpeakerBuffers.get(speakerId);
-            if (speakerBuffer) {
+            if (speakerBuffer && captionsDiv) {
               speakerBuffer.text = captionsDiv.textContent.trim();
 
               // If caption length is too long, process it
@@ -981,9 +1110,11 @@ function transcriber(mutationsList, observer) {
       mutation.removedNodes.forEach((node) => {
         if (
           node.nodeType === Node.ELEMENT_NODE &&
-          node.classList.contains("nMcdL")
+          node.classList.contains(
+            SELECTORS.transcript.speakerContainer.slice(1)
+          )
         ) {
-          // Process any remaining transcripts for removed speakers
+          // remaining transcripts for removed speakers
           speakerObservers.forEach((observer, speakerId) => {
             processSpeakerTranscript(speakerId);
           });
@@ -1116,7 +1247,7 @@ function overWriteChromeStorage(keys, sendDownloadMessage) {
 function updateMeetingTitle() {
   try {
     // NON CRITICAL DOM DEPENDENCY
-    const title = document.querySelector(".u6vdEc").textContent;
+    const title = document.querySelector(SELECTORS.meetingTitle).textContent;
     const invalidFilenameRegex = /[^\w\-_.() ]/g;
     meetingTitle = title.replace(invalidFilenameRegex, "_");
     overWriteChromeStorage(["meetingTitle"], false);
