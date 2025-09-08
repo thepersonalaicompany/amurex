@@ -541,7 +541,7 @@ function meetingRoutines(uiType) {
           const transcriptElements = document.querySelectorAll(
             SELECTORS.transcriptContainer
           );
-          console.log("transcriptElements: ", transcriptElements);
+          // console.log("transcriptElements: ", transcriptElements);
           return transcriptElements.length > 0 ? transcriptElements[0] : null;
         };
 
@@ -1081,12 +1081,18 @@ function transcriber(mutationsList, observer) {
           const captionsObserver = new MutationObserver((captionsMutations) => {
             const speakerBuffer = activeSpeakerBuffers.get(speakerId);
             if (speakerBuffer && captionsDiv) {
+              // Update the buffer with the latest text
               speakerBuffer.text = captionsDiv.textContent.trim();
 
-              // If caption length is too long, process it
-              if (speakerBuffer.text.length > 250) {
-                processSpeakerTranscript(speakerId);
+              // Clear existing timeout if it exists
+              if (speakerBuffer.timeoutId) {
+                clearTimeout(speakerBuffer.timeoutId);
               }
+
+              // Set new timeout - will trigger after 5 seconds of inactivity
+              speakerBuffer.timeoutId = setTimeout(() => {
+                processSpeakerTranscript(speakerId);
+              }, 5000);
             }
           });
 
@@ -1114,9 +1120,9 @@ function transcriber(mutationsList, observer) {
             SELECTORS.transcript.speakerContainer.slice(1)
           )
         ) {
-          // remaining transcripts for removed speakers
+          // Process remaining transcripts for removed speakers
           speakerObservers.forEach((observer, speakerId) => {
-            processSpeakerTranscript(speakerId);
+            processSpeakerTranscript(speakerId, true);
           });
         }
       });
@@ -1131,7 +1137,7 @@ function transcriber(mutationsList, observer) {
   });
 }
 
-function processSpeakerTranscript(speakerId) {
+function processSpeakerTranscript(speakerId, isFinal = false) {
   const speakerBuffer = activeSpeakerBuffers.get(speakerId);
   if (speakerBuffer && speakerBuffer.text.trim()) {
     // Push to transcript array
@@ -1140,29 +1146,42 @@ function processSpeakerTranscript(speakerId) {
       timeStamp: speakerBuffer.startTime,
       personTranscript: speakerBuffer.text,
     });
-
     // Save to storage
     overWriteChromeStorage(["transcript"], false);
-
     // Send via WebSocket if connected
     if (ws && ws.readyState === WebSocket.OPEN) {
-      const formattedPayload = `${speakerBuffer.name} (${speakerBuffer.startTime})\n${speakerBuffer.text}\n`;
+      const formattedPayload = `${speakerBuffer.name} (${speakerBuffer.startTime})
+${speakerBuffer.text}
+`;
       ws.send(
         JSON.stringify({
           type: "transcript_update",
-          data: formattedPayload,
+          formattedPayload,
         })
       );
     }
 
-    // Cleanup
-    const observer = speakerObservers.get(speakerId);
-    if (observer) {
-      observer.disconnect();
-      speakerObservers.delete(speakerId);
+    // Reset the buffer for the next utterance
+    speakerBuffer.text = "";
+    speakerBuffer.startTime = new Date()
+      .toLocaleString("default", timeFormat)
+      .toUpperCase();
+
+    // Clear the timeout reference
+    if (speakerBuffer.timeoutId) {
+      clearTimeout(speakerBuffer.timeoutId);
+      speakerBuffer.timeoutId = null;
     }
-    console.log("activeSpeakerBuffers", activeSpeakerBuffers);
-    activeSpeakerBuffers.delete(speakerId);
+
+    // If this is the final utterance (node removed), clean up completely
+    if (isFinal) {
+      const observer = speakerObservers.get(speakerId);
+      if (observer) {
+        observer.disconnect();
+        speakerObservers.delete(speakerId);
+      }
+      activeSpeakerBuffers.delete(speakerId);
+    }
   }
 }
 
