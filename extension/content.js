@@ -541,7 +541,6 @@ function meetingRoutines(uiType) {
           const transcriptElements = document.querySelectorAll(
             SELECTORS.transcriptContainer
           );
-          // console.log("transcriptElements: ", transcriptElements);
           return transcriptElements.length > 0 ? transcriptElements[0] : null;
         };
 
@@ -1032,9 +1031,6 @@ function transcriber(mutationsList, observer) {
           // Prefer extracting from the node's children array rather than classnames/ids
           const headerDiv = node && node.children ? node.children[0] : null;
           let captionsDiv = node && node.children ? node.children[1] : null;
-
-          console.log("captionsDiv: ", captionsDiv);
-          console.log("headerDiv: ", headerDiv);
 
           // Fallback to selectors if direct children are not present
           if (!captionsDiv) {
