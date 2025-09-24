@@ -1,0 +1,36 @@
+{
+  "name": "Amurex (Early Preview)",
+  "version": "1.0.27",
+  "description": "Your AI meeting Copilot",
+  "manifest_version": 3,
+  "side_panel": {
+    "default_path": "index.html"
+  },
+  "content_scripts": [
+    {
+      "js": ["content.js"],
+      "run_at": "document_end",
+      "matches": ["https://meet.google.com/*"],
+      "exclude_matches": ["https://meet.google.com/"]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["storage", "downloads", "sidePanel", "cookies", "scripting"],
+  "host_permissions": [
+    "https://meet.google.com/*",
+    "https://api.amurex.ai/*",
+    "https://app.amurex.ai/*",
+    "http://*/*",
+    "https://*/*"
+  ],
+  "action": {
+    "default_title": "Amurex",
+    "default_icon": {
+      "16": "icon.png",
+      "48": "icon.png",
+      "128": "icon.png"
+    }
+  }
+}
